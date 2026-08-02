@@ -302,7 +302,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 view local weather advisories, and interact with our AI Citizen Assistant 24/7.
               </p>
               <p>
-                Sama-sama tayong magsumikap para sa mas masagana at ligtas na Umingan. Mabanglo at Marayang Araw sa inyong lahat!&quot;
+                Sama-sama tayong magsumikap para sa mas masagana at ligtas na Umingan. Maligayang Araw sa inyong lahat!&quot;
               </p>
             </div>
 
