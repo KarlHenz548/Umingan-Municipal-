@@ -27,7 +27,12 @@ export const TourismSection: React.FC = () => {
   const [itineraryModalOpen, setItineraryModalOpen] = useState<boolean>(false);
   const [tripType, setTripType] = useState<'day' | 'weekend' | 'food'>('day');
 
-  const categories = ['All', 'Nature & Adventure', 'Parks & Recreation', 'Cultural & Heritage', 'Food & Delicacies'];
+  const categories = [
+    'All',
+    'Nature & Adventure',
+    'Parks & Recreation',
+    'Local Dining'
+  ];
 
   const filteredSpots = TOURIST_SPOTS.filter(spot => 
     selectedCategory === 'All' || spot.category === selectedCategory
@@ -268,29 +273,29 @@ export const TourismSection: React.FC = () => {
                     <li className="flex gap-3">
                       <span className="font-mono text-amber-400 font-bold">05:30 AM</span>
                       <div>
-                        <strong className="text-white block">Sunrise Trek at Mount Amor View Deck</strong>
-                        <p className="text-slate-300">Watch the sea of clouds and mountain peak sunrise at Barangay Esperanza.</p>
+                        <strong className="text-white block">Sunrise Trek at Mount Amorong & VIEWtiful DECK</strong>
+                        <p className="text-slate-300">Catch 360-degree panoramic sunrise views from Sitio Tebag viewing platform or Mount Amorong peak.</p>
                       </div>
                     </li>
                     <li className="flex gap-3">
-                      <span className="font-mono text-amber-400 font-bold">09:00 AM</span>
+                      <span className="font-mono text-amber-400 font-bold">09:30 AM</span>
                       <div>
-                        <strong className="text-white block">Hearty Ilocano Breakfast & Fresh Coconut Water</strong>
-                        <p className="text-slate-300">Enjoy Pinakbet and hot coffee at the Mt. Amor Foothills eatery.</p>
+                        <strong className="text-white block">Dela Peña Farm Grape Picking & ATV Ride</strong>
+                        <p className="text-slate-300">Experience green grape picking in San Juan and open-terrain ATV riding.</p>
                       </div>
                     </li>
                     <li className="flex gap-3">
-                      <span className="font-mono text-amber-400 font-bold">11:00 AM</span>
+                      <span className="font-mono text-amber-400 font-bold">01:00 PM</span>
                       <div>
-                        <strong className="text-white block">Barat River Eco-Park & Picnic Rafting</strong>
-                        <p className="text-slate-300">Cool down in fresh river spillway waters and enjoy riverside cottage lunch.</p>
+                        <strong className="text-white block">Diket Falls Trek & Sinabaan River Wading</strong>
+                        <p className="text-slate-300">Cool off with a boulder trail trek to Diket Falls or relax at Sinabaan Riverbank cottages.</p>
                       </div>
                     </li>
                     <li className="flex gap-3">
-                      <span className="font-mono text-amber-400 font-bold">04:30 PM</span>
+                      <span className="font-mono text-amber-400 font-bold">05:00 PM</span>
                       <div>
-                        <strong className="text-white block">Umingan Plaza & Fresh Hot Tupig Shopping</strong>
-                        <p className="text-slate-300">Visit the Immaculate Conception Parish and buy authentic Tupig and Suman at the Public Market perimeter.</p>
+                        <strong className="text-white block">Umingan Plaza & Fresh Hot Tupig Market</strong>
+                        <p className="text-slate-300">Visit Immaculate Conception Parish and enjoy fresh coconut-grilled Tupig at the town center.</p>
                       </div>
                     </li>
                   </ul>
@@ -301,15 +306,15 @@ export const TourismSection: React.FC = () => {
                     <li className="flex gap-3">
                       <span className="font-mono text-emerald-400 font-bold">DAY 1</span>
                       <div>
-                        <strong className="text-white block">Salasa Caves & Nature Eco-Trail</strong>
-                        <p className="text-slate-300">Explore natural limestone caverns with local guides. Spend the afternoon swimming at Barat River Spillway.</p>
+                        <strong className="text-white block">Garden Lake Resort Camping & ATV Adventure</strong>
+                        <p className="text-slate-300">Enjoy unlimited ATV riding in Luna Este, boodle fights, and campsite bonfires.</p>
                       </div>
                     </li>
                     <li className="flex gap-3">
                       <span className="font-mono text-emerald-400 font-bold">DAY 2</span>
                       <div>
-                        <strong className="text-white block">Mount Amor Summit & Town Plaza Evening Fountain</strong>
-                        <p className="text-slate-300">Early morning summit hike, followed by town heritage tour and evening musical fountain display at Umingan Plaza.</p>
+                        <strong className="text-white block">Dela Peña Grape Picking & VIEWtiful DECK Sunset</strong>
+                        <p className="text-slate-300">Experience green grape picking and natural spring pools in San Juan, then cap off the trip at VIEWtiful DECK in Sitio Tebag.</p>
                       </div>
                     </li>
                   </ul>
