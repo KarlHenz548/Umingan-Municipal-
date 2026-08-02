@@ -61,66 +61,6 @@ export const BarangayDirectorySection: React.FC = () => {
     <section className="py-12 bg-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
         
-        {/* 2026 Municipal Officials Banner */}
-        <div className="bg-blue-950 text-white rounded-2xl p-6 sm:p-8 border-2 border-yellow-500 shadow-xl space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-blue-800 pb-4">
-            <div>
-              <span className="bg-yellow-500 text-blue-950 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md">
-                2026 Municipal Leadership
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight mt-2">
-                Executive Officials of Umingan, Pangasinan
-              </h2>
-              <p className="text-xs sm:text-sm text-blue-200 mt-0.5">
-                Headquarters at Municipal Hall, Poblacion West • Founded 1811
-              </p>
-            </div>
-            <div className="text-right hidden sm:block">
-              <span className="text-xs text-yellow-400 font-bold block">1st Class Municipality</span>
-              <span className="text-[11px] text-blue-300">{BARANGAYS.length} Barangays • Zip Code 2443</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {MUNICIPAL_OFFICIALS.map((official, i) => (
-              <div 
-                key={i} 
-                className={`p-4 rounded-xl border transition-all flex items-start gap-4 ${
-                  i === 0 
-                    ? 'bg-blue-900/90 border-yellow-500 shadow-lg md:col-span-2 lg:col-span-1' 
-                    : 'bg-blue-900/50 border-blue-800'
-                }`}
-              >
-                <Image 
-                  src={official.image} 
-                  alt={official.name}
-                  width={56}
-                  height={56}
-                  unoptimized
-                  referrerPolicy="no-referrer"
-                  className="w-14 h-14 rounded-xl object-cover border-2 border-yellow-400 shadow-md shrink-0"
-                />
-                <div className="space-y-1">
-                  <span className="text-[10px] font-extrabold text-yellow-400 uppercase tracking-wider block">
-                    {official.position}
-                  </span>
-                  <h3 className="text-sm font-bold text-white leading-tight">
-                    {official.name}
-                  </h3>
-                  <p className="text-[11px] text-blue-200 leading-snug font-medium">
-                    {official.committee}
-                  </p>
-                  {official.quote && (
-                    <p className="text-[10px] text-yellow-200/90 italic pt-1 border-t border-blue-800/60 mt-1 line-clamp-2">
-                      &quot;{official.quote}&quot;
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Header & Search */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-100 pb-5">
@@ -287,6 +227,66 @@ export const BarangayDirectorySection: React.FC = () => {
             )}
           </div>
         )}
+
+        {/* 2026 Municipal Officials Banner */}
+        <div className="bg-blue-950 text-white rounded-2xl p-6 sm:p-8 border-2 border-yellow-500 shadow-xl space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-blue-800 pb-4">
+            <div>
+              <span className="bg-yellow-500 text-blue-950 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md">
+                2026 Municipal Leadership
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight mt-2">
+                Executive Officials of Umingan, Pangasinan
+              </h2>
+              <p className="text-xs sm:text-sm text-blue-200 mt-0.5">
+                Headquarters at Municipal Hall, Poblacion West • Founded 1811
+              </p>
+            </div>
+            <div className="text-right hidden sm:block">
+              <span className="text-xs text-yellow-400 font-bold block">1st Class Municipality</span>
+              <span className="text-[11px] text-blue-300">{BARANGAYS.length} Barangays • Zip Code 2443</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {MUNICIPAL_OFFICIALS.map((official, i) => (
+              <div 
+                key={i} 
+                className={`p-4 rounded-xl border transition-all flex items-start gap-4 ${
+                  i === 0 
+                    ? 'bg-blue-900/90 border-yellow-500 shadow-lg md:col-span-2 lg:col-span-1' 
+                    : 'bg-blue-900/50 border-blue-800'
+                }`}
+              >
+                <Image 
+                  src={official.image} 
+                  alt={official.name}
+                  width={56}
+                  height={56}
+                  unoptimized
+                  referrerPolicy="no-referrer"
+                  className="w-14 h-14 rounded-xl object-cover border-2 border-yellow-400 shadow-md shrink-0"
+                />
+                <div className="space-y-1">
+                  <span className="text-[10px] font-extrabold text-yellow-400 uppercase tracking-wider block">
+                    {official.position}
+                  </span>
+                  <h3 className="text-sm font-bold text-white leading-tight">
+                    {official.name}
+                  </h3>
+                  <p className="text-[11px] text-blue-200 leading-snug font-medium">
+                    {official.committee}
+                  </p>
+                  {official.quote && (
+                    <p className="text-[10px] text-yellow-200/90 italic pt-1 border-t border-blue-800/60 mt-1 line-clamp-2">
+                      &quot;{official.quote}&quot;
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
       </div>
     </section>
