@@ -1,0 +1,6 @@
+{
+  "name": "Municipality of Umingan Portal",
+  "description": "Official Municipal Portal of Umingan, Pangasinan featuring public updates, e-government services, tourism guide, emergency alerts, and AI citizen assistance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
