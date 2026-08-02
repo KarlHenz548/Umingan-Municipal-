@@ -10,12 +10,14 @@ import { BarangayDirectorySection } from '@/components/BarangayDirectorySection'
 import { EmergencySection } from '@/components/EmergencySection';
 import { GrievanceDeskModal } from '@/components/GrievanceDeskModal';
 import { AiCitizenAssistantModal } from '@/components/AiCitizenAssistantModal';
+import { AdminPortalModal } from '@/components/AdminPortalModal';
 import { Footer } from '@/components/Footer';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<string>('home');
   const [aiAssistantOpen, setAiAssistantOpen] = useState<boolean>(false);
   const [grievanceOpen, setGrievanceOpen] = useState<boolean>(false);
+  const [adminOpen, setAdminOpen] = useState<boolean>(false);
 
   const handleNavigateTab = (tab: string) => {
     setActiveTab(tab);
@@ -30,6 +32,7 @@ export default function Home() {
         setActiveTab={handleNavigateTab}
         onOpenAiAssistant={() => setAiAssistantOpen(true)}
         onOpenGrievance={() => setGrievanceOpen(true)}
+        onOpenAdmin={() => setAdminOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -59,6 +62,7 @@ export default function Home() {
       <Footer
         onNavigateTab={handleNavigateTab}
         onOpenGrievance={() => setGrievanceOpen(true)}
+        onOpenAdmin={() => setAdminOpen(true)}
       />
 
       {/* Modals */}
@@ -70,6 +74,11 @@ export default function Home() {
       <AiCitizenAssistantModal
         isOpen={aiAssistantOpen}
         onClose={() => setAiAssistantOpen(false)}
+      />
+
+      <AdminPortalModal
+        isOpen={adminOpen}
+        onClose={() => setAdminOpen(false)}
       />
     </div>
   );

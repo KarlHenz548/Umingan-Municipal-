@@ -8,6 +8,7 @@ import {
   Sparkles, 
   Search, 
   ShieldAlert, 
+  ShieldCheck,
   Calendar, 
   Clock, 
   Menu, 
@@ -26,13 +27,15 @@ interface NavbarProps {
   setActiveTab: (tab: string) => void;
   onOpenAiAssistant: () => void;
   onOpenGrievance: () => void;
+  onOpenAdmin: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   onOpenAiAssistant,
-  onOpenGrievance
+  onOpenGrievance,
+  onOpenAdmin
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [phTime, setPhTime] = useState<string>('');
@@ -91,8 +94,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center gap-1 text-blue-100 hover:text-yellow-300 transition-colors cursor-pointer bg-blue-900/80 hover:bg-blue-800 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border border-blue-700"
             >
               <MessageSquareHeart className="w-3.5 h-3.5 text-yellow-400" />
-              Citizen Feedback Desk
+              Citizen Concern Desk
             </button>
+
+            <button 
+              onClick={onOpenAdmin}
+              className="flex items-center gap-1 text-yellow-300 hover:text-yellow-200 transition-colors cursor-pointer bg-blue-950 hover:bg-blue-900 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border border-yellow-500/60 shadow-xs"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-yellow-400" />
+              Admin Login
+            </button>
+
             <a 
               href="tel:0755749111" 
               className="flex items-center gap-1 bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1 rounded-full text-[11px] uppercase tracking-wider transition-colors shadow-xs"
@@ -140,6 +152,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Sparkles className="w-4 h-4 text-blue-950 animate-spin-slow" />
             <span>Lingkod-Umingan AI</span>
           </button>
+
+         
+           
         </div>
 
         {/* Mobile menu trigger */}
@@ -214,12 +229,22 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="pt-3 border-t border-blue-800 space-y-2">
             <button
               onClick={() => {
+                onOpenAdmin();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-blue-950 font-black py-3 px-4 rounded-xl text-xs uppercase tracking-wider shadow-md"
+            >
+              <ShieldCheck className="w-4 h-4 text-blue-950" />
+              2026 LGU Admin Portal Login
+            </button>
+            <button
+              onClick={() => {
                 onOpenAiAssistant();
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-blue-950 font-extrabold py-3 px-4 rounded-xl text-xs uppercase tracking-wider shadow-md"
+              className="w-full flex items-center justify-center gap-2 bg-blue-900 text-yellow-300 hover:bg-blue-800 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider border border-blue-700"
             >
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="w-4 h-4 text-yellow-400" />
               Ask Lingkod-Umingan AI
             </button>
             <button

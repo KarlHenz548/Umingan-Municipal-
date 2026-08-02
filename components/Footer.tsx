@@ -16,11 +16,13 @@ import { TOWN_DETAILS } from '@/lib/umingan-data';
 interface FooterProps {
   onNavigateTab: (tab: string) => void;
   onOpenGrievance: () => void;
+  onOpenAdmin?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   onNavigateTab,
-  onOpenGrievance
+  onOpenGrievance,
+  onOpenAdmin
 }) => {
   return (
     <footer className="bg-blue-950 text-blue-100 border-t-4 border-yellow-500 pt-12 pb-8">
@@ -97,6 +99,14 @@ export const Footer: React.FC<FooterProps> = ({
                   Sumbong at Mungkahi Feedback Desk
                 </button>
               </li>
+              {onOpenAdmin && (
+                <li>
+                  <button onClick={() => onOpenAdmin()} className="hover:text-amber-300 transition-colors text-amber-400 font-black flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                    2026 LGU Admin Portal
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
 
