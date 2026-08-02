@@ -116,7 +116,7 @@ export const EmergencySection: React.FC = () => {
             Emergency Hotlines & Local Weather Bulletins
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 mt-1">
-            24/7 active emergency response teams, live PAGASA weather telemetry, and designated evacuation centers.
+            24/7 active emergency response teams, live PAGASA weather and designated evacuation centers.
           </p>
         </div>
 
@@ -194,7 +194,7 @@ export const EmergencySection: React.FC = () => {
                 {weather.condition}
               </h4>
               <p className="text-xs text-slate-300 leading-relaxed">
-                MDRRMO live weather telemetry for Eastern Pangasinan agricultural plains and foothills. Light to moderate localized rain showers monitored.
+                MDRRMO live weather for Eastern Pangasinan agricultural plains and foothills. Light to moderate localized rain showers monitored.
               </p>
             </div>
           </div>

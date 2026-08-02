@@ -76,7 +76,7 @@ export const TOWN_DETAILS = {
 
 export const MUNICIPAL_OFFICIALS: MunicipalOfficial[] = [
   {
-    name: "Hon. Atty. Chris Evert B. Tadeo-Leynes",
+    name: "Chris Evert B. Tadeo-Leynes",
     position: "Municipal Mayor (2026)",
     committee: "Executive & Administrative Operations",
     officeHours: "Mon-Fri 8:00 AM - 5:00 PM",
@@ -84,7 +84,7 @@ export const MUNICIPAL_OFFICIALS: MunicipalOfficial[] = [
     quote: "Dedicated to driving transparent digital public governance, modernizing agricultural cold storage hubs, and promoting Umingan's eco-tourism landmarks."
   },
   {
-    name: "Hon. Emil Tristan T. Trinidad",
+    name: "Emil Tristan T. Trinidad",
     position: "Municipal Vice Mayor (2026)",
     committee: "Presiding Officer, Sangguniang Bayan",
     officeHours: "Mon-Fri 8:00 AM - 5:00 PM",
@@ -92,70 +92,70 @@ export const MUNICIPAL_OFFICIALS: MunicipalOfficial[] = [
     quote: "Fostering progressive municipal ordinances that directly empower local onion farmers, youth scholars, and MSMEs across our 58 barangays."
   },
   {
-    name: "Hon. Michael Bryan O. Onia",
+    name: "Michael Bryan O. Onia",
     position: "Sangguniang Bayan Member",
     committee: "Chairman, Agriculture & Cooperative Development",
     officeHours: "Tue & Thu Sessions",
     image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80"
   },
   {
-    name: "Hon. Jocelyn R. Ibasan",
+    name: "Jocelyn R. Ibasan",
     position: "Sangguniang Bayan Member",
     committee: "Chairwoman, Health, Sanitation & Social Services",
     officeHours: "Tue & Thu Sessions",
     image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=600&q=80"
   },
   {
-    name: "Hon. Rosalina A. De Leon",
+    name: "Rosalina A. De Leon",
     position: "Sangguniang Bayan Member",
     committee: "Chairwoman, Education, Youth & Sports Development",
     officeHours: "Tue & Thu Sessions",
     image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80"
   },
   {
-    name: "Hon. Fernando Ma M. Cruz Jr.",
+    name: "Fernando Ma M. Cruz Jr.",
     position: "Sangguniang Bayan Member",
     committee: "Chairman, Infrastructure, Public Works & Zoning",
     officeHours: "Tue & Thu Sessions",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80"
   },
   {
-    name: "Hon. Danica Mae M. Darapiza",
+    name: "Danica Mae M. Darapiza",
     position: "Sangguniang Bayan Member",
     committee: "Chairwoman, Tourism, Trade, Industry & Culture",
     officeHours: "Tue & Thu Sessions",
     image: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=600&q=80"
   },
   {
-    name: "Hon. Edgar Rafael M. Tumbocon",
+    name: "Edgar Rafael M. Tumbocon",
     position: "Sangguniang Bayan Member",
     committee: "Chairman, Ways & Means, Finance & Appropriation",
     officeHours: "Tue & Thu Sessions",
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80"
   },
   {
-    name: "Hon. Fred A. Fernandez",
+    name: "Fred A. Fernandez",
     position: "Sangguniang Bayan Member",
     committee: "Chairman, Public Order, Safety & Disaster Management",
     officeHours: "Tue & Thu Sessions",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&q=80"
   },
   {
-    name: "Hon. Virgilio P. Padilla",
+    name: "Virgilio P. Padilla",
     position: "Sangguniang Bayan Member",
     committee: "Chairman, Environmental Protection & Natural Resources",
     officeHours: "Tue & Thu Sessions",
     image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80"
   },
   {
-    name: "Hon. Alain Jermen P. Rabang",
+    name: "Alain Jermen P. Rabang",
     position: "Sangguniang Bayan Member",
     committee: "Chairman, Information Technology & Digital Innovation",
     officeHours: "Tue & Thu Sessions",
     image: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=600&q=80"
   },
   {
-    name: "Hon. Wilmer M. Escobar",
+    name: "Wilmer M. Escobar",
     position: "Sangguniang Bayan Member",
     committee: "Chairman, Barangay Affairs & Rural Development",
     officeHours: "Tue & Thu Sessions",
