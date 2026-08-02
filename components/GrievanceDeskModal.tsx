@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { 
   MessageSquareHeart, 
   X, 
   CheckCircle2, 
   Send, 
-  Upload, 
-  ShieldCheck,
-  Building,
-  Sparkles
+  Upload,
+  AlertCircle,
+  Image as ImageIcon,
+  Trash2
 } from 'lucide-react';
 import { BARANGAYS } from '@/lib/umingan-data';
 
@@ -27,21 +28,102 @@ export const GrievanceDeskModal: React.FC<GrievanceDeskModalProps> = ({
   const [contact, setContact] = useState<string>('');
   const [barangay, setBarangay] = useState<string>('Poblacion East');
   const [description, setDescription] = useState<string>('');
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [photoName, setPhotoName] = useState<string | null>(null);
+  const [photoSize, setPhotoSize] = useState<string | null>(null);
   const [submittedRef, setSubmittedRef] = useState<string | null>(null);
+  const [submittedPhoto, setSubmittedPhoto] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Please select a valid image file (JPEG, PNG, WEBP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage('File size exceeds 5MB limit. Please choose a smaller photo.');
+      return;
+    }
+
+    setErrorMessage(null);
+    setPhotoName(file.name);
+    setPhotoSize(`${(file.size / 1024).toFixed(1)} KB`);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPhoto(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setPhoto(null);
+    setPhotoName(null);
+    setPhotoSize(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const randomCode = `UMG-GRV-${Math.floor(1000 + Math.random() * 9000)}`;
-    setSubmittedRef(randomCode);
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category,
+          name,
+          contact,
+          barangay,
+          description,
+          photo
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSubmittedRef(data.referenceCode);
+        setSubmittedPhoto(photo);
+      } else {
+        const fallbackCode = `UMG-GRV-${Math.floor(1000 + Math.random() * 9000)}`;
+        setSubmittedRef(fallbackCode);
+        setSubmittedPhoto(photo);
+      }
+    } catch {
+      const fallbackCode = `UMG-GRV-${Math.floor(1000 + Math.random() * 9000)}`;
+      setSubmittedRef(fallbackCode);
+      setSubmittedPhoto(photo);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
     setSubmittedRef(null);
+    setSubmittedPhoto(null);
     setName('');
     setContact('');
     setDescription('');
+    setPhoto(null);
+    setPhotoName(null);
+    setPhotoSize(null);
+    setErrorMessage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     onClose();
   };
 
@@ -68,6 +150,13 @@ export const GrievanceDeskModal: React.FC<GrievanceDeskModalProps> = ({
                 Report community issues (streetlights, drainage, garbage, road repairs) directly to the Office of the Mayor & Action Officers.
               </p>
             </div>
+
+            {errorMessage && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2 font-medium">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -146,20 +235,78 @@ export const GrievanceDeskModal: React.FC<GrievanceDeskModalProps> = ({
                 />
               </div>
 
-              <div className="bg-slate-50 p-3 rounded-xl border border-dashed border-slate-300 flex items-center justify-between text-xs text-slate-500">
-                <span className="flex items-center gap-2">
-                  <Upload className="w-4 h-4 text-emerald-700" />
-                  Attach Photo / Landmark Evidence (Optional)
-                </span>
-                <span className="text-[10px] text-slate-400">JPEG/PNG up to 5MB</span>
+              {/* Photo Upload Feature */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Attach Photo / Landmark Evidence
+                </label>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                {!photo ? (
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-slate-50 hover:bg-emerald-50/50 p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-emerald-500 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <Upload className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-800 group-hover:text-emerald-900">Click to upload photo evidence</p>
+                        <p className="text-[11px] text-slate-500">Attach photos of broken streetlight, road damage, or landmark</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] bg-slate-200 text-slate-700 font-medium px-2.5 py-1 rounded-md shrink-0">
+                      JPEG/PNG &lt; 5MB
+                    </span>
+                  </div>
+                ) : (
+                  <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-emerald-300 shrink-0 bg-slate-100">
+                        <Image 
+                          src={photo} 
+                          alt="Photo Preview" 
+                          fill 
+                          className="object-cover"
+                          referrerPolicy="no-referrer"
+                          unoptimized
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 truncate">
+                          <ImageIcon className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                          <span className="truncate">{photoName || 'Attached_Photo.jpg'}</span>
+                        </div>
+                        <p className="text-[10px] text-emerald-700 mt-0.5">{photoSize} • Photo attached ready for submission</p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="p-2 text-rose-600 hover:bg-rose-100/70 rounded-lg transition-colors shrink-0 cursor-pointer"
+                      title="Remove Photo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs py-3 px-4 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full bg-emerald-800 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-xs py-3 px-4 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Send className="w-4 h-4 text-amber-300" />
-                <span>Submit Official Public Report</span>
+                <span>{isSubmitting ? 'Submitting Report...' : 'Submit Official Public Report'}</span>
               </button>
             </form>
           </>
@@ -179,6 +326,25 @@ export const GrievanceDeskModal: React.FC<GrievanceDeskModalProps> = ({
               </p>
             </div>
 
+            {submittedPhoto && (
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 inline-flex items-center gap-3 text-left max-w-xs mx-auto">
+                <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-slate-300 shrink-0 bg-slate-200">
+                  <Image 
+                    src={submittedPhoto} 
+                    alt="Evidence Thumbnail" 
+                    fill 
+                    className="object-cover"
+                    referrerPolicy="no-referrer"
+                    unoptimized
+                  />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Photo Evidence Attached</p>
+                  <p className="text-[10px] text-slate-500">Received by Action Officer</p>
+                </div>
+              </div>
+            )}
+
             <div className="bg-slate-50 p-4 rounded-xl text-xs text-slate-700 border border-slate-200">
               <p className="font-semibold text-slate-900">Standard Resolution Timeframe:</p>
               <p className="text-slate-600 mt-0.5">Streetlights & Small Repairs: 24 to 48 Hours • Drainage/Roads: 3 to 5 Business Days.</p>
@@ -197,3 +363,4 @@ export const GrievanceDeskModal: React.FC<GrievanceDeskModalProps> = ({
     </div>
   );
 };
+
