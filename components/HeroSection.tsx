@@ -56,7 +56,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     { title: 'Civil Registry & Certs', desc: 'Request birth, marriage & death certificates', tab: 'services', icon: FileText, color: 'bg-blue-600' },
     { title: 'Farmers RSBSA Registration', desc: 'Seed subsidies, fuel vouchers & agri assistance', tab: 'services', icon: Sprout, color: 'bg-green-700' },
     { title: 'Tourist Spots & Kanen Guide', desc: 'Explore Mount Amor, Barat River & local treats', tab: 'tourism', icon: Compass, color: 'bg-teal-600' },
-    { title: '58 Barangays Directory', desc: 'Contact numbers & barangay captains list', tab: 'barangays', icon: Users, color: 'bg-indigo-600' }
+    { title: `${TOWN_DETAILS.barangayCount} Barangays Directory`, desc: 'Contact numbers & barangay captains list', tab: 'barangays', icon: Users, color: 'bg-indigo-600' }
   ];
 
   return (
@@ -147,24 +147,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="bg-blue-900/90 p-6 rounded-2xl border-2 border-yellow-500 shadow-2xl space-y-4 text-white">
               <div className="flex items-center gap-3">
                 <img 
-                  src="https://picsum.photos/seed/mayor_umingan/200/200" 
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80" 
                   alt={TOWN_DETAILS.mayor} 
                   className="w-16 h-16 rounded-full object-cover border-2 border-yellow-400 shadow-md shrink-0"
                 />
                 <div>
                   <div className="flex items-center gap-1.5 text-yellow-400 text-xs font-extrabold uppercase tracking-wider">
                     <Award className="w-3.5 h-3.5 text-yellow-400" />
-                    Office of the Municipal Mayor
+                    Office of the Municipal Mayor (2026)
                   </div>
                   <h3 className="text-base font-bold text-white leading-tight">
                     {TOWN_DETAILS.mayor}
                   </h3>
-                  <p className="text-xs text-blue-200 font-medium">Municipal Mayor, Umingan</p>
+                  <p className="text-xs text-blue-200 font-semibold">Municipal Mayor, Umingan, Pangasinan</p>
                 </div>
               </div>
 
               <blockquote className="text-xs text-blue-100 italic bg-blue-950/70 p-3.5 rounded-xl border-l-4 border-yellow-400 leading-relaxed font-normal">
-                &quot;Our administration is dedicated to delivering transparent digital governance, upgrading agricultural infrastructure, and celebrating Umingan&apos;s natural wonders.&quot;
+                &quot;Our 2026 administration is dedicated to delivering transparent digital governance, upgrading agricultural infrastructure, and celebrating Umingan&apos;s eco-tourism treasures.&quot;
               </blockquote>
 
               <div className="flex items-center gap-2 pt-1">
@@ -263,14 +263,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
               <img 
-                src="https://picsum.photos/seed/mayor_umingan/200/200" 
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80" 
                 alt={TOWN_DETAILS.mayor} 
-                className="w-16 h-16 rounded-full object-cover border-2 border-emerald-700 shadow-md"
+                className="w-16 h-16 rounded-full object-cover border-2 border-blue-900 shadow-md"
               />
               <div>
-                <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider block">Message from the Mayor</span>
+                <span className="text-xs font-bold text-yellow-600 uppercase tracking-wider block">2026 Message from the Mayor</span>
                 <h3 className="text-lg font-bold text-slate-900">{TOWN_DETAILS.mayor}</h3>
-                <p className="text-xs text-slate-500">Municipal Mayor • Municipality of Umingan</p>
+                <p className="text-xs text-slate-500">Municipal Mayor • Municipality of Umingan, Pangasinan</p>
               </div>
             </div>
 

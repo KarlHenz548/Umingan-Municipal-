@@ -42,7 +42,7 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
 
             <p className="text-xs text-blue-200 leading-relaxed font-normal">
-              &quot;{TOWN_DETAILS.tagline}&quot; — Serving 58 barangays with transparent e-governance, agricultural development, and environmental protection.
+              &quot;{TOWN_DETAILS.tagline}&quot; — Serving {TOWN_DETAILS.barangayCount} barangays with transparent e-governance, agricultural development, and environmental protection.
             </p>
 
             <div className="space-y-2 text-xs text-blue-200">
@@ -128,7 +128,7 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <button onClick={() => onNavigateTab('barangays')} className="hover:text-yellow-400 transition-colors">
-                  Directory of 58 Barangay Captains
+                  Directory of {TOWN_DETAILS.barangayCount} Barangay Captains
                 </button>
               </li>
               <li>
@@ -176,7 +176,13 @@ export const Footer: React.FC<FooterProps> = ({
 
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-emerald-900 flex flex-col sm:flex-row items-center justify-between text-xs text-emerald-400/80 gap-3">
-          <p>© {new Date().getFullYear()} Local Government Unit of Umingan, Pangasinan. All Rights Reserved.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-center sm:text-left">
+            <p>© {new Date().getFullYear()} Local Government Unit of Umingan, Pangasinan. All Rights Reserved.</p>
+            <span className="hidden sm:inline text-emerald-800">•</span>
+            <p className="text-emerald-300 font-medium">
+              Site Created by <span className="text-amber-300 font-bold">Karl Hen&apos;z Ferrer</span>
+            </p>
+          </div>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1 text-emerald-300">
               <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />

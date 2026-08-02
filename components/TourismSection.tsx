@@ -142,79 +142,79 @@ export const TourismSection: React.FC = () => {
         {/* Spot Detail Modal */}
         {selectedSpot && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-slate-900 text-white max-w-3xl w-full rounded-2xl shadow-2xl p-6 sm:p-8 relative space-y-6 max-h-[90vh] overflow-y-auto border border-white/10">
+            <div className="bg-blue-950 text-white max-w-3xl w-full rounded-2xl shadow-2xl p-6 sm:p-8 relative space-y-6 max-h-[90vh] overflow-y-auto border-2 border-yellow-500">
               <button
                 onClick={() => setSelectedSpot(null)}
-                className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 p-2 rounded-full text-blue-200 hover:text-white hover:bg-blue-900 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="bg-amber-400 text-slate-950 font-bold text-[10px] px-2.5 py-0.5 rounded-md uppercase">
+                  <span className="bg-yellow-500 text-blue-950 font-black text-[10px] px-2.5 py-0.5 rounded-md uppercase tracking-wider">
                     {selectedSpot.category}
                   </span>
-                  <span className="text-amber-400 text-xs font-bold flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  <span className="text-yellow-400 text-xs font-black flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                     {selectedSpot.rating} / 5.0 Rating
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold text-white">{selectedSpot.name}</h3>
-                <p className="text-xs text-slate-300 flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                <h3 className="text-2xl font-black text-white uppercase tracking-tight">{selectedSpot.name}</h3>
+                <p className="text-xs text-blue-200 flex items-center gap-1 font-semibold">
+                  <MapPin className="w-3.5 h-3.5 text-yellow-400" />
                   {selectedSpot.location}
                 </p>
               </div>
 
-              <div className="rounded-xl overflow-hidden max-h-72 bg-slate-800">
+              <div className="rounded-xl overflow-hidden max-h-80 bg-blue-900 border border-blue-800">
                 <img src={selectedSpot.image} alt={selectedSpot.name} className="w-full h-full object-cover" />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-800/80 p-4 rounded-xl border border-white/10 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-blue-900/90 p-4 rounded-xl border border-blue-800 text-xs">
                 <div>
-                  <span className="text-slate-400 font-medium block">Best Time To Visit:</span>
-                  <span className="font-bold text-amber-300">{selectedSpot.bestTimeToVisit}</span>
+                  <span className="text-blue-300 font-medium block">Best Time To Visit:</span>
+                  <span className="font-extrabold text-yellow-400">{selectedSpot.bestTimeToVisit}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 font-medium block">Entrance & Rates:</span>
-                  <span className="font-bold text-emerald-300">{selectedSpot.entranceFee}</span>
+                  <span className="text-blue-300 font-medium block">Entrance & Rates:</span>
+                  <span className="font-extrabold text-yellow-300">{selectedSpot.entranceFee}</span>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-sm font-bold text-white">Description & Highlights</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">{selectedSpot.description}</p>
+                <h4 className="text-sm font-black text-white uppercase tracking-wider">Description & Key Highlights</h4>
+                <p className="text-xs text-blue-100 leading-relaxed font-normal">{selectedSpot.description}</p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {selectedSpot.highlights.map((h, i) => (
-                    <span key={i} className="bg-emerald-950 text-emerald-300 text-xs font-medium px-3 py-1 rounded-lg border border-emerald-600/40">
+                    <span key={i} className="bg-blue-900 text-yellow-300 text-xs font-bold px-3 py-1 rounded-lg border border-yellow-500/40 uppercase">
                       ✓ {h}
                     </span>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-amber-950/60 p-4 rounded-xl border border-amber-500/40 text-xs space-y-1">
-                <span className="font-bold text-amber-400 flex items-center gap-1">
-                  <Info className="w-4 h-4" />
-                  Traveler Tip & Advisory:
+              <div className="bg-blue-900/80 p-4 rounded-xl border border-yellow-500/40 text-xs space-y-1">
+                <span className="font-extrabold text-yellow-400 flex items-center gap-1 uppercase tracking-wider">
+                  <Info className="w-4 h-4 text-yellow-400" />
+                  Traveler Advisory & Local Tips:
                 </span>
-                <p className="text-slate-200">{selectedSpot.travelTips}</p>
+                <p className="text-blue-100 font-medium">{selectedSpot.travelTips}</p>
               </div>
 
-              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+              <div className="pt-4 border-t border-blue-800 flex items-center justify-between">
                 <a 
                   href={`https://maps.google.com/?q=${selectedSpot.coordinates.lat},${selectedSpot.coordinates.lng}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2"
+                  className="bg-yellow-500 hover:bg-yellow-400 text-blue-950 font-extrabold text-xs px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2 uppercase tracking-wider shadow-md"
                 >
-                  <Navigation className="w-4 h-4" />
+                  <Navigation className="w-4 h-4 text-blue-950" />
                   <span>Open in Google Maps</span>
                 </a>
                 <button
                   onClick={() => setSelectedSpot(null)}
-                  className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-colors cursor-pointer"
+                  className="bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-colors cursor-pointer border border-blue-700 uppercase"
                 >
                   Close Window
                 </button>
