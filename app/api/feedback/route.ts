@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ketmrgmuhgelxdpqzxrq.supabase.co';
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+
+// Helper function for Direct REST API fetch
+async function fetchSupabaseRest(endpoint: string, options: RequestInit = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    ...(options.headers || {}),
+  };
+  return fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, { ...options, headers });
+}
+
+// ==========================================
+// 1. POST: MAG-SAVE NG BAGONG FEEDBACK
+// ==========================================
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -27,50 +44,31 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     };
 
-    const supabaseUrl = 'https://ketmrgmuhgelxdpqzxrq.supabase.co';
-    const supabaseKey = 'sb_publishable_Zph252PPdN06eVnIiiNGaA_QdPFt9li';
-
     let savedToSupabase = false;
 
+    // 1. Try Supabase Client
     try {
-      let restRes = await fetch(`${supabaseUrl}/rest/v1/citizen_feedback`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Prefer': 'return=minimal',
-        },
-        body: JSON.stringify([feedbackRecord]),
-      });
-
-      if (restRes.ok || restRes.status === 201) {
-        savedToSupabase = true;
-      } else {
-        const errText = await restRes.text();
-        // If Supabase table is missing the 'photo' column, retry without the 'photo' property
-        if (errText.includes('photo') || errText.includes('PGRST204')) {
-          const recordWithoutPhoto = { ...feedbackRecord };
-          delete recordWithoutPhoto.photo;
-
-          const retryRes = await fetch(`${supabaseUrl}/rest/v1/citizen_feedback`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Prefer': 'return=minimal',
-            },
-            body: JSON.stringify([recordWithoutPhoto]),
-          });
-
-          if (retryRes.ok || retryRes.status === 201) {
-            savedToSupabase = true;
-          }
-        }
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        const { error } = await supabase.from('citizen_feedback').insert([feedbackRecord]);
+        if (!error) savedToSupabase = true;
       }
-    } catch (dbErr: unknown) {
-      console.warn('Supabase store note:', dbErr);
+    } catch {
+      // Ignore client error and fall back to REST
+    }
+
+    // 2. Direct REST Fallback
+    if (!savedToSupabase && SUPABASE_KEY) {
+      try {
+        const res = await fetchSupabaseRest('citizen_feedback', {
+          method: 'POST',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify([feedbackRecord]),
+        });
+        if (res.ok || res.status === 201) savedToSupabase = true;
+      } catch (restErr) {
+        console.warn('REST Insert Error:', restErr);
+      }
     }
 
     return NextResponse.json({
@@ -86,162 +84,183 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Default realistic initial feedback reports if database is fresh or empty
-const INITIAL_DEMO_FEEDBACK = [
-  {
-    id: 'demo-1',
-    reference_code: 'UMG-GRV-8492',
-    category: 'streetlight',
-    name: 'Roberto V. Dela Cruz',
-    contact: '0917-555-8492',
-    barangay: 'Poblacion East',
-    description: '3 consecutive streetlights along Rizal Street near Municipal Hall are flickering and turned off at night. Causes dark hazard for evening pedestrians.',
-    photo: 'https://images.unsplash.com/photo-1517483000871-1dbf64a6e1c6?auto=format&fit=crop&w=600&q=80',
-    status: 'pending',
-    admin_notes: '',
-    created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-  },
-  {
-    id: 'demo-2',
-    reference_code: 'UMG-GRV-7311',
-    category: 'road',
-    name: 'Maria Clara Santos',
-    contact: '0918-234-5678',
-    barangay: 'Alo-o',
-    description: 'Deep road pothole near the Alo-o Elementary School bridge expansion. Requires immediate asphalt patch to prevent motor tricycle accidents.',
-    photo: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=600&q=80',
-    status: 'in_progress',
-    admin_notes: 'Dispatched Municipal Engineering Team (Engr. R. Santos). Asphalt repair scheduled for tomorrow 9:00 AM.',
-    created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-  },
-  {
-    id: 'demo-3',
-    reference_code: 'UMG-GRV-6120',
-    category: 'garbage',
-    name: 'Farmer Juan A. MENDOZA',
-    contact: '0920-987-6543',
-    barangay: 'Lauren',
-    description: 'Garbage dump accumulation along Purok 3 main feeder road. Requesting MENRO waste truck schedule pickup for agricultural waste containers.',
-    photo: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=600&q=80',
-    status: 'under_review',
-    admin_notes: 'Referred to MENRO Environment Officer for schedule confirmation on Friday route.',
-    created_at: new Date(Date.now() - 3600000 * 32).toISOString(),
-  },
-  {
-    id: 'demo-4',
-    reference_code: 'UMG-GRV-5099',
-    category: 'health',
-    name: 'Dr. Anita P. Soriano',
-    contact: '0999-111-2233',
-    barangay: 'Maseilseil',
-    description: 'Stagnant canal water accumulation behind Barangay Hall after heavy rains. Requesting Municipal Health Office anti-dengue larvicide spraying.',
-    photo: null,
-    status: 'resolved',
-    admin_notes: 'Sanitation team completed larvicide spraying and canal declogging on Aug 1, 2026.',
-    created_at: new Date(Date.now() - 3600000 * 72).toISOString(),
-  },
-  {
-    id: 'demo-5',
-    reference_code: 'UMG-GRV-4201',
-    category: 'appreciation',
-    name: 'Elena D. Roxas',
-    contact: '0915-444-3322',
-    barangay: 'San Jose',
-    description: 'Commendation to the BPLO staff for fast business permit renewal process at the Municipal Hall ONE-STOP-SHOP. Very efficient and helpful service!',
-    photo: null,
-    status: 'resolved',
-    admin_notes: 'Commendation letter forwarded to HR & Office of the Mayor for employee recognition.',
-    created_at: new Date(Date.now() - 3600000 * 96).toISOString(),
-  },
-];
-
+// ==========================================
+// 2. GET: KUNIN ANG FEEDBACKS PARA SA ADMIN
+// ==========================================
 export async function GET() {
-  const supabaseUrl = 'https://ketmrgmuhgelxdpqzxrq.supabase.co';
-  const supabaseKey = 'sb_publishable_Zph252PPdN06eVnIiiNGaA_QdPFt9li';
-
   try {
-    const restRes = await fetch(`${supabaseUrl}/rest/v1/citizen_feedback?select=*&order=created_at.desc&limit=50`, {
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
-      },
-      cache: 'no-store',
-    });
+    let feedbackData: Record<string, unknown>[] = [];
+    let fetched = false;
 
-    if (restRes.ok) {
-      const data = await restRes.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return NextResponse.json({
-          success: true,
-          feedback: data,
+    // 1. Try via Supabase SDK Client
+    try {
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('citizen_feedback')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        if (!error && data) {
+          feedbackData = data;
+          fetched = true;
+        }
+      }
+    } catch {
+      // SDK Failed, proceed to REST API fallback
+    }
+
+    // 2. Fallback via Direct REST API Fetch
+    if (!fetched && SUPABASE_KEY) {
+      try {
+        const res = await fetchSupabaseRest('citizen_feedback?select=*&order=created_at.desc&limit=100', {
+          cache: 'no-store',
         });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            feedbackData = data;
+            fetched = true;
+          }
+        }
+      } catch (restErr) {
+        console.error('REST Fetch Error:', restErr);
       }
     }
 
     return NextResponse.json({
       success: true,
-      feedback: INITIAL_DEMO_FEEDBACK,
+      feedback: feedbackData,
     });
-  } catch {
-    return NextResponse.json({
-      success: true,
-      feedback: INITIAL_DEMO_FEEDBACK,
-    });
+  } catch (err) {
+    console.error('API GET Exception:', err);
+    return NextResponse.json({ success: true, feedback: [] });
   }
 }
 
+
+// ==========================================
+// 3. PATCH: UPDATE STATUS / NOTES / PHOTO
+// ==========================================
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { reference_code, status, admin_notes, photo } = body;
+    const { reference_code, id, status, admin_notes, notes, remarks, photo } = body;
 
-    if (!reference_code) {
-      return NextResponse.json({ error: 'Reference code is required.' }, { status: 400 });
+    if (!reference_code && !id) {
+      return NextResponse.json(
+        { error: 'Reference code or ID is required for update.' },
+        { status: 400 }
+      );
     }
 
-    const supabaseUrl = 'https://ketmrgmuhgelxdpqzxrq.supabase.co';
-    const supabaseKey = 'sb_publishable_Zph252PPdN06eVnIiiNGaA_QdPFt9li';
+    // Prepare fields to update (support multiple naming conventions for safety)
+    const updateData: Record<string, unknown> = {};
+    if (status !== undefined) updateData.status = status;
+    
+    // Check notes/admin_notes value
+    const notesValue = admin_notes ?? notes ?? remarks;
+    if (notesValue !== undefined) {
+      updateData.admin_notes = notesValue;
+      updateData.notes = notesValue; // fallback column
+    }
+    
+    if (photo !== undefined) updateData.photo = photo;
 
+    let updatedInSupabase = false;
+    let updatedRecord = null;
+
+    // 1. Try updating via Supabase Client SDK
     try {
-      const updateData: Record<string, unknown> = {};
-      if (status) updateData.status = status;
-      if (admin_notes !== undefined) updateData.admin_notes = admin_notes;
-      if (photo !== undefined) updateData.photo = photo;
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        let query = supabase.from('citizen_feedback').update(updateData);
+        
+        if (reference_code) {
+          query = query.eq('reference_code', reference_code);
+        } else if (id) {
+          query = query.eq('id', id);
+        }
 
-      const patchRes = await fetch(`${supabaseUrl}/rest/v1/citizen_feedback?reference_code=eq.${encodeURIComponent(reference_code)}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Prefer': 'return=representation',
-        },
-        body: JSON.stringify(updateData),
-      });
+        const { data, error } = await query.select();
 
-      if (patchRes.ok) {
-        const updated = await patchRes.json();
-        return NextResponse.json({
-          success: true,
-          message: 'Report updated successfully',
-          data: updated,
-        });
+        if (!error && data && data.length > 0) {
+          updatedInSupabase = true;
+          updatedRecord = data[0];
+        } else if (error) {
+          console.warn('Supabase SDK Patch Warning:', error.message);
+          
+          // Retry with minimal payload if unknown column was provided
+          const safeData: Record<string, unknown> = {};
+          if (status !== undefined) safeData.status = status;
+          if (photo !== undefined) safeData.photo = photo;
+          
+          let retryQuery = supabase.from('citizen_feedback').update(safeData);
+          if (reference_code) retryQuery = retryQuery.eq('reference_code', reference_code);
+          else if (id) retryQuery = retryQuery.eq('id', id);
+
+          const { data: retryData, error: retryErr } = await retryQuery.select();
+          if (!retryErr && retryData && retryData.length > 0) {
+            updatedInSupabase = true;
+            updatedRecord = retryData[0];
+          }
+        }
       }
-    } catch (e) {
-      console.warn('Supabase patch note:', e);
+    } catch (sdkErr) {
+      console.warn('Supabase SDK Patch Exception:', sdkErr);
+    }
+
+    // 2. Direct REST Fallback if SDK didn't confirm update
+    if (!updatedInSupabase && SUPABASE_KEY) {
+      try {
+        const filterQuery = reference_code
+          ? `reference_code=eq.${encodeURIComponent(reference_code)}`
+          : `id=eq.${encodeURIComponent(String(id))}`;
+
+        const res = await fetchSupabaseRest(`citizen_feedback?${filterQuery}`, {
+          method: 'PATCH',
+          headers: {
+            'Prefer': 'return=representation',
+          },
+          body: JSON.stringify(updateData),
+        });
+
+        if (res.ok) {
+          const restData = await res.json();
+          if (Array.isArray(restData) && restData.length > 0) {
+            updatedInSupabase = true;
+            updatedRecord = restData[0];
+          }
+        }
+      } catch (restErr) {
+        console.warn('REST Patch Exception:', restErr);
+      }
+    }
+
+    if (updatedInSupabase) {
+      return NextResponse.json({
+        success: true,
+        message: 'Report updated successfully in database.',
+        data: updatedRecord,
+      });
     }
 
     return NextResponse.json({
-      success: true,
-      message: 'Report updated locally',
-      record: { reference_code, status, admin_notes, photo },
-    });
+      success: false,
+      message: 'Failed to persist update to database. Please check Supabase RLS policy.',
+      record: { reference_code, id, ...updateData },
+    }, { status: 400 });
+
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Internal Server Error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
+// ==========================================
+// 4. DELETE: PAG-BURA NG REPORT (ADMIN ONLY)
+// ==========================================
 export async function DELETE(req: NextRequest) {
   try {
     const body = await req.json();
@@ -265,89 +284,42 @@ export async function DELETE(req: NextRequest) {
 
     let deletedFromSupabase = false;
 
-    // 1. Try deleting via Supabase JS Client
+    // SDK Delete
     try {
       const supabase = getSupabaseClient();
       if (supabase) {
         if (codesToDelete.length > 0) {
-          const { error } = await supabase
-            .from('citizen_feedback')
-            .delete()
-            .in('reference_code', codesToDelete);
-
-          if (!error) {
-            deletedFromSupabase = true;
-          } else {
-            console.warn('Supabase Client Delete error (reference_code):', error.message);
-          }
+          const { error } = await supabase.from('citizen_feedback').delete().in('reference_code', codesToDelete);
+          if (!error) deletedFromSupabase = true;
         }
-
         if (idsToDelete.length > 0) {
-          const { error } = await supabase
-            .from('citizen_feedback')
-            .delete()
-            .in('id', idsToDelete);
-
-          if (!error) {
-            deletedFromSupabase = true;
-          } else {
-            console.warn('Supabase Client Delete error (id):', error.message);
-          }
+          const { error } = await supabase.from('citizen_feedback').delete().in('id', idsToDelete);
+          if (!error) deletedFromSupabase = true;
         }
       }
-    } catch (clientErr) {
-      console.warn('Supabase Client Delete exception:', clientErr);
+    } catch {
+      // Fallback
     }
 
-    // 2. Direct REST Fallback if client wasn't available or didn't confirm
-    if (!deletedFromSupabase) {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ketmrgmuhgelxdpqzxrq.supabase.co';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_Zph252PPdN06eVnIiiNGaA_QdPFt9li';
-
+    // Direct REST Fallback
+    if (!deletedFromSupabase && SUPABASE_KEY) {
       try {
-        if (codesToDelete.length > 0) {
-          for (const code of codesToDelete) {
-            const deleteRes = await fetch(`${supabaseUrl}/rest/v1/citizen_feedback?reference_code=eq.${encodeURIComponent(code)}`, {
-              method: 'DELETE',
-              headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Prefer': 'return=representation',
-              },
-            });
-
-            if (deleteRes.ok) {
-              deletedFromSupabase = true;
-            }
-          }
+        for (const code of codesToDelete) {
+          const res = await fetchSupabaseRest(`citizen_feedback?reference_code=eq.${encodeURIComponent(code)}`, {
+            method: 'DELETE',
+          });
+          if (res.ok) deletedFromSupabase = true;
         }
-
-        if (idsToDelete.length > 0) {
-          for (const rawId of idsToDelete) {
-            const deleteRes = await fetch(`${supabaseUrl}/rest/v1/citizen_feedback?id=eq.${encodeURIComponent(String(rawId))}`, {
-              method: 'DELETE',
-              headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Prefer': 'return=representation',
-              },
-            });
-
-            if (deleteRes.ok) {
-              deletedFromSupabase = true;
-            }
-          }
-        }
-      } catch (restErr) {
-        console.warn('Supabase REST Delete exception:', restErr);
+      } catch (e) {
+        console.warn('REST Delete Error:', e);
       }
     }
 
     return NextResponse.json({
       success: true,
       message: deletedFromSupabase
-        ? `Successfully deleted record(s) from Supabase database.`
-        : `Record(s) removed locally.`,
+        ? 'Successfully deleted record(s) from Supabase database.'
+        : 'Record(s) removed locally.',
       deletedFromSupabase,
       deletedCodes: codesToDelete,
       deletedIds: idsToDelete,

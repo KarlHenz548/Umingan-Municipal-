@@ -202,6 +202,8 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     }
   };
 
+  
+
   // Update Status, Admin Notes & Evidence Photo
   const handleSaveStatus = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -270,7 +272,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     }
   };
 
-  // Perform deletion API call
+ // Perform deletion API call directly to /api/feedback
   const handleDeleteReports = async (codes: string[]) => {
     if (codes.length === 0) return;
     setIsDeleting(true);
@@ -278,17 +280,24 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     try {
       const res = await fetch('/api/feedback', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reference_codes: codes }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reference_codes: codes,
+        }),
       });
 
       if (res.ok) {
+        // Alisin sa local UI state ang mga nabura
         setFeedbackList(prev => prev.filter(item => !codes.includes(item.reference_code)));
         setSelectedRefCodes(prev => prev.filter(code => !codes.includes(code)));
 
         if (selectedReport && codes.includes(selectedReport.reference_code)) {
           setSelectedReport(null);
         }
+      } else {
+        console.error('Failed to delete report(s):', await res.text());
       }
     } catch (err) {
       console.error('Failed to delete report(s):', err);
