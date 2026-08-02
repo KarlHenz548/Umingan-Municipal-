@@ -19,15 +19,122 @@ import {
   DollarSign,
   ClipboardList,
   ShieldCheck,
-  UserCheck
+  UserCheck,
+  Coins
 } from 'lucide-react';
+
+const BUSINESS_CATEGORIES_INFO: Record<string, {
+  name: string;
+  suggestedCapital: number;
+  capitalDisplay: string;
+  capitalRange: string;
+  description: string;
+}> = {
+  retail: {
+    name: 'General Retail & Sari-Sari Store / Grocery',
+    suggestedCapital: 100000,
+    capitalDisplay: '100,000',
+    capitalRange: '₱30,000 – ₱250,000',
+    description: 'Typical small to medium retail shop or sari-sari store inventory.'
+  },
+  agri: {
+    name: 'Agro-Processing, Cold Storage & Rice Mill',
+    suggestedCapital: 500000,
+    capitalDisplay: '500,000',
+    capitalRange: '₱300,000 – ₱2,000,000',
+    description: 'Machinery, drying facilities, milling equipment & cold storage.'
+  },
+  restaurant: {
+    name: 'Food Service, Eatery & Catering',
+    suggestedCapital: 150000,
+    capitalDisplay: '150,000',
+    capitalRange: '₱80,000 – ₱500,000',
+    description: 'Kitchen equipment, dining setup & initial food inventory.'
+  },
+  manufacturing: {
+    name: 'Manufacturing & Processing',
+    suggestedCapital: 750000,
+    capitalDisplay: '750,000',
+    capitalRange: '₱500,000 – ₱3,000,000',
+    description: 'Factory equipment, raw materials & processing machinery.'
+  },
+  pawnshop: {
+    name: 'Financial Services, Pawnshop & Lending',
+    suggestedCapital: 1000000,
+    capitalDisplay: '1,000,000',
+    capitalRange: '₱1,000,000 – ₱5,000,000',
+    description: 'Standard minimum capitalization requirement under BSP / LGU guidelines.'
+  },
+  services: {
+    name: 'Professional & Personal Services',
+    suggestedCapital: 100000,
+    capitalDisplay: '100,000',
+    capitalRange: '₱50,000 – ₱300,000',
+    description: 'Salon, repair shop, office equipment & professional service setup.'
+  },
+};
+
+const PROPERTY_TYPES_INFO: Record<string, {
+  name: string;
+  assessmentLevel: string;
+  suggestedValue: number;
+  valueDisplay: string;
+  valueRange: string;
+  description: string;
+}> = {
+  residential: {
+    name: 'Residential Land & House',
+    assessmentLevel: '20% Assessment Level',
+    suggestedValue: 1000000,
+    valueDisplay: '1,000,000',
+    valueRange: '₱300,000 – ₱2,500,000',
+    description: 'Standard residential house and lot in Poblacion or Rural Barangays.'
+  },
+  agricultural: {
+    name: 'Agricultural / Farm / Rice Land',
+    assessmentLevel: '40% Assessment Level',
+    suggestedValue: 500000,
+    valueDisplay: '500,000',
+    valueRange: '₱200,000 – ₱1,500,000 per hectare',
+    description: 'Irrigated/rainfed rice lands, corn fields, or orchard parcels in Umingan.'
+  },
+  commercial: {
+    name: 'Commercial Building & Lot',
+    assessmentLevel: '40% Assessment Level',
+    suggestedValue: 2500000,
+    valueDisplay: '2,500,000',
+    valueRange: '₱1,000,000 – ₱10,000,000',
+    description: 'Commercial buildings, market stalls, and store lots along highway arteries.'
+  },
+  industrial: {
+    name: 'Industrial Facility & Warehouse',
+    assessmentLevel: '50% Assessment Level',
+    suggestedValue: 5000000,
+    valueDisplay: '5,000,000',
+    valueRange: '₱3,000,000 – ₱20,000,000',
+    description: 'Agro-industrial processing facilities, rice mills, and cold storage compounds.'
+  }
+};
 
 export const ServicesSection: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'bplo' | 'rpt' | 'tracker' | 'civil' | 'agri'>('bplo');
 
+  // Format Helper Functions for Money/Numeric Inputs
+  const formatNumberWithCommas = (val: string): string => {
+    if (!val) return '';
+    const cleanStr = val.replace(/\D/g, '');
+    if (!cleanStr) return '';
+    return Number(cleanStr).toLocaleString('en-US');
+  };
+
+  const parseFormattedNumber = (val: string): number => {
+    const cleanStr = val.replace(/\D/g, '');
+    return cleanStr ? parseInt(cleanStr, 10) : 0;
+  };
+
   // BPLO State
   const [businessCategory, setBusinessCategory] = useState<string>('retail');
-  const [grossSales, setGrossSales] = useState<number>(500000);
+  const [grossSalesDisplay, setGrossSalesDisplay] = useState<string>('100,000');
   const [bploResult, setBploResult] = useState<{
     mayorsPermit: number;
     sanitaryFee: number;
@@ -36,9 +143,17 @@ export const ServicesSection: React.FC = () => {
     totalFee: number;
   } | null>(null);
 
+  const handleCategoryChange = (catKey: string) => {
+    setBusinessCategory(catKey);
+    const info = BUSINESS_CATEGORIES_INFO[catKey];
+    if (info) {
+      setGrossSalesDisplay(info.capitalDisplay);
+    }
+  };
+
   // RPT State
   const [propertyType, setPropertyType] = useState<string>('residential');
-  const [marketValue, setMarketValue] = useState<number>(1000000);
+  const [marketValueDisplay, setMarketValueDisplay] = useState<string>('1,000,000');
   const [rptResult, setRptResult] = useState<{
     assessedValue: number;
     basicTax: number;
@@ -46,6 +161,14 @@ export const ServicesSection: React.FC = () => {
     totalTax: number;
     discountedTax: number;
   } | null>(null);
+
+  const handlePropertyTypeChange = (typeKey: string) => {
+    setPropertyType(typeKey);
+    const info = PROPERTY_TYPES_INFO[typeKey];
+    if (info) {
+      setMarketValueDisplay(info.valueDisplay);
+    }
+  };
 
   // Tracker State
   const [trackingCode, setTrackingCode] = useState<string>('UMG-2026-8942');
@@ -70,6 +193,7 @@ export const ServicesSection: React.FC = () => {
   // Calculate BPLO Fees
   const handleCalculateBPLO = (e: React.FormEvent) => {
     e.preventDefault();
+    const grossSales = parseFormattedNumber(grossSalesDisplay);
     let baseRate = 0.01;
     if (businessCategory === 'manufacturing' || businessCategory === 'agri') baseRate = 0.008;
     if (businessCategory === 'pawnshop') baseRate = 0.015;
@@ -92,6 +216,7 @@ export const ServicesSection: React.FC = () => {
   // Calculate RPT Dues
   const handleCalculateRPT = (e: React.FormEvent) => {
     e.preventDefault();
+    const marketValue = parseFormattedNumber(marketValueDisplay);
     let assessmentLevel = 0.20; // Residential
     if (propertyType === 'commercial') assessmentLevel = 0.40;
     if (propertyType === 'agricultural') assessmentLevel = 0.40;
@@ -240,7 +365,7 @@ export const ServicesSection: React.FC = () => {
                   </label>
                   <select
                     value={businessCategory}
-                    onChange={(e) => setBusinessCategory(e.target.value)}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
                     className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-emerald-700"
                   >
                     <option value="retail">General Retail & Sari-Sari Store / Grocery</option>
@@ -250,6 +375,33 @@ export const ServicesSection: React.FC = () => {
                     <option value="pawnshop">Financial Services, Pawnshop & Lending</option>
                     <option value="services">Professional & Personal Services</option>
                   </select>
+
+                  {BUSINESS_CATEGORIES_INFO[businessCategory] && (
+                    <div className="mt-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 space-y-1">
+                      <div className="flex items-center justify-between font-bold">
+                        <span className="flex items-center gap-1.5 text-amber-900">
+                          <Coins className="w-4 h-4 text-amber-700 shrink-0" />
+                          Suggested Initial Capital:
+                        </span>
+                        <span className="bg-amber-200/90 text-amber-950 font-mono font-black px-2 py-0.5 rounded-md text-[11px]">
+                          ₱{BUSINESS_CATEGORIES_INFO[businessCategory].capitalDisplay}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-amber-800">
+                        <span>Typical Range: <strong>{BUSINESS_CATEGORIES_INFO[businessCategory].capitalRange}</strong></span>
+                        <button
+                          type="button"
+                          onClick={() => setGrossSalesDisplay(BUSINESS_CATEGORIES_INFO[businessCategory].capitalDisplay)}
+                          className="text-[10px] font-extrabold text-emerald-800 hover:text-emerald-900 underline cursor-pointer"
+                        >
+                          Auto-Fill ₱{BUSINESS_CATEGORIES_INFO[businessCategory].capitalDisplay}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-amber-700 font-medium pt-0.5">
+                        {BUSINESS_CATEGORIES_INFO[businessCategory].description}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -257,11 +409,11 @@ export const ServicesSection: React.FC = () => {
                     Declared Annual Gross Sales or Initial Capitalization (₱ PHP)
                   </label>
                   <input
-                    type="number"
-                    value={grossSales}
-                    onChange={(e) => setGrossSales(Number(e.target.value))}
-                    step="10000"
-                    min="10000"
+                    type="text"
+                    inputMode="numeric"
+                    value={grossSalesDisplay}
+                    onChange={(e) => setGrossSalesDisplay(formatNumberWithCommas(e.target.value))}
+                    placeholder="Enter amount (e.g. 500,000)"
                     className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:border-emerald-700"
                   />
                   <p className="text-[11px] text-slate-500 mt-1">Example: ₱500,000 for standard retail shop.</p>
@@ -384,7 +536,7 @@ export const ServicesSection: React.FC = () => {
                   </label>
                   <select
                     value={propertyType}
-                    onChange={(e) => setPropertyType(e.target.value)}
+                    onChange={(e) => handlePropertyTypeChange(e.target.value)}
                     className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-emerald-700"
                   >
                     <option value="residential">Residential Land & House (20% Assessment Level)</option>
@@ -392,6 +544,36 @@ export const ServicesSection: React.FC = () => {
                     <option value="commercial">Commercial Building & Lot (40% Assessment Level)</option>
                     <option value="industrial">Industrial Facility (50% Assessment Level)</option>
                   </select>
+
+                  {PROPERTY_TYPES_INFO[propertyType] && (
+                    <div className="mt-2.5 p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-950 space-y-1">
+                      <div className="flex items-center justify-between font-bold">
+                        <span className="flex items-center gap-1.5 text-blue-900">
+                          <Coins className="w-4 h-4 text-blue-700 shrink-0" />
+                          Suggested Fair Market Value:
+                        </span>
+                        <span className="bg-blue-200/90 text-blue-950 font-mono font-black px-2 py-0.5 rounded-md text-[11px]">
+                          ₱{PROPERTY_TYPES_INFO[propertyType].valueDisplay}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-blue-800">
+                        <span>Assessment Level: <strong>{PROPERTY_TYPES_INFO[propertyType].assessmentLevel}</strong></span>
+                        <button
+                          type="button"
+                          onClick={() => setMarketValueDisplay(PROPERTY_TYPES_INFO[propertyType].valueDisplay)}
+                          className="text-[10px] font-extrabold text-blue-900 hover:text-blue-950 underline cursor-pointer"
+                        >
+                          Auto-Fill ₱{PROPERTY_TYPES_INFO[propertyType].valueDisplay}
+                        </button>
+                      </div>
+                      <div className="text-[11px] text-slate-600">
+                        Typical Range: <strong>{PROPERTY_TYPES_INFO[propertyType].valueRange}</strong>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium pt-0.5">
+                        {PROPERTY_TYPES_INFO[propertyType].description}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -399,11 +581,11 @@ export const ServicesSection: React.FC = () => {
                     Declared Fair Market Value (₱ PHP)
                   </label>
                   <input
-                    type="number"
-                    value={marketValue}
-                    onChange={(e) => setMarketValue(Number(e.target.value))}
-                    step="50000"
-                    min="50000"
+                    type="text"
+                    inputMode="numeric"
+                    value={marketValueDisplay}
+                    onChange={(e) => setMarketValueDisplay(formatNumberWithCommas(e.target.value))}
+                    placeholder="Enter amount (e.g. 1,000,000)"
                     className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:border-emerald-700"
                   />
                   <p className="text-[11px] text-slate-500 mt-1">As stated in your official Tax Declaration certificate.</p>
