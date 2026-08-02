@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center gap-1 text-blue-100 hover:text-yellow-300 transition-colors cursor-pointer bg-blue-900/80 hover:bg-blue-800 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border border-blue-700"
             >
               <MessageSquareHeart className="w-3.5 h-3.5 text-yellow-400" />
-              Citizen Concern Desk
+              Citizen Feedback Desk
             </button>
 
             <button 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { 
   ShieldCheck, 
@@ -22,7 +22,12 @@ import {
   Sparkles,
   Users,
   Image as ImageIcon,
-  Check
+  Check,
+  Trash2,
+  CheckSquare,
+  Square,
+  Edit3,
+  Upload
 } from 'lucide-react';
 import { BARANGAYS } from '@/lib/umingan-data';
 
@@ -72,12 +77,24 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [barangayFilter, setBarangayFilter] = useState<string>('all');
 
+  // Deletion and Selection State
+  const [selectedRefCodes, setSelectedRefCodes] = useState<string[]>([]);
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
+    isOpen: boolean;
+    codes: string[];
+    title: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
   // Selected Report for Detail / Resolution Inspector
   const [selectedReport, setSelectedReport] = useState<FeedbackRecord | null>(null);
   const [newStatus, setNewStatus] = useState<string>('pending');
   const [adminNote, setAdminNote] = useState<string>('');
+  const [editPhoto, setEditPhoto] = useState<string | null>(null);
   const [isSavingStatus, setIsSavingStatus] = useState<boolean>(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch Feedback Reports
   const fetchReports = useCallback(async () => {
@@ -152,10 +169,40 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     setSelectedReport(report);
     setNewStatus(report.status || 'pending');
     setAdminNote(report.admin_notes || '');
+    setEditPhoto(report.photo || null);
     setSaveSuccessMsg(null);
   };
 
-  // Update Status & Admin Notes
+  // Photo handlers for editing evidence
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file (JPEG, PNG, WEBP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size exceeds 5MB limit. Please choose a smaller photo.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setEditPhoto(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setEditPhoto(null);
+    if (editFileInputRef.current) {
+      editFileInputRef.current.value = '';
+    }
+  };
+
+  // Update Status, Admin Notes & Evidence Photo
   const handleSaveStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedReport) return;
@@ -170,7 +217,8 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
         body: JSON.stringify({
           reference_code: selectedReport.reference_code,
           status: newStatus,
-          admin_notes: adminNote
+          admin_notes: adminNote,
+          photo: editPhoto
         })
       });
 
@@ -181,7 +229,8 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
             return {
               ...item,
               status: newStatus,
-              admin_notes: adminNote
+              admin_notes: adminNote,
+              photo: editPhoto || undefined
             };
           }
           return item;
@@ -190,16 +239,62 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
         setSelectedReport(prev => prev ? {
           ...prev,
           status: newStatus,
-          admin_notes: adminNote
+          admin_notes: adminNote,
+          photo: editPhoto || undefined
         } : null);
 
-        setSaveSuccessMsg('Status & action officer notes saved successfully!');
+        setSaveSuccessMsg('Report details, action notes & photo evidence saved successfully!');
         setTimeout(() => setSaveSuccessMsg(null), 3000);
       }
     } catch (err) {
       console.error('Error saving report status:', err);
     } finally {
       setIsSavingStatus(false);
+    }
+  };
+
+  // Toggle selection for a single report
+  const toggleSelectReport = (refCode: string) => {
+    setSelectedRefCodes(prev =>
+      prev.includes(refCode) ? prev.filter(code => code !== refCode) : [...prev, refCode]
+    );
+  };
+
+  // Select / Deselect all visible reports
+  const toggleSelectAll = (visibleCodes: string[]) => {
+    const allSelected = visibleCodes.length > 0 && visibleCodes.every(code => selectedRefCodes.includes(code));
+    if (allSelected) {
+      setSelectedRefCodes(prev => prev.filter(code => !visibleCodes.includes(code)));
+    } else {
+      setSelectedRefCodes(prev => Array.from(new Set([...prev, ...visibleCodes])));
+    }
+  };
+
+  // Perform deletion API call
+  const handleDeleteReports = async (codes: string[]) => {
+    if (codes.length === 0) return;
+    setIsDeleting(true);
+
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference_codes: codes }),
+      });
+
+      if (res.ok) {
+        setFeedbackList(prev => prev.filter(item => !codes.includes(item.reference_code)));
+        setSelectedRefCodes(prev => prev.filter(code => !codes.includes(code)));
+
+        if (selectedReport && codes.includes(selectedReport.reference_code)) {
+          setSelectedReport(null);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to delete report(s):', err);
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmModal(null);
     }
   };
 
@@ -555,6 +650,37 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                       </div>
 
                     </div>
+
+                    {/* Active Selection Bulk Actions Bar */}
+                    {selectedRefCodes.length > 0 && (
+                      <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-rose-950/60 border border-rose-800 rounded-xl text-xs transition-all animate-fadeIn">
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="w-4 h-4 text-rose-400" />
+                          <span className="font-extrabold text-white">
+                            {selectedRefCodes.length} Report(s) Selected
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setDeleteConfirmModal({
+                              isOpen: true,
+                              codes: selectedRefCodes,
+                              title: `Delete ${selectedRefCodes.length} Selected Report(s)`
+                            })}
+                            className="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete Selected ({selectedRefCodes.length})</span>
+                          </button>
+                          <button
+                            onClick={() => setSelectedRefCodes([])}
+                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                          >
+                            Deselect All
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Feedback Table / List */}
@@ -570,6 +696,20 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         <table className="w-full text-left text-xs">
                           <thead className="bg-slate-900 text-slate-300 border-b border-slate-800 font-bold uppercase text-[10px] tracking-wider">
                             <tr>
+                              <th className="p-3.5 w-10 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleSelectAll(filteredReports.map(r => r.reference_code))}
+                                  className="text-slate-400 hover:text-yellow-400 transition-colors cursor-pointer"
+                                  title="Select All Visible Reports"
+                                >
+                                  {filteredReports.length > 0 && filteredReports.every(r => selectedRefCodes.includes(r.reference_code)) ? (
+                                    <CheckSquare className="w-4 h-4 text-yellow-400" />
+                                  ) : (
+                                    <Square className="w-4 h-4 text-slate-500" />
+                                  )}
+                                </button>
+                              </th>
                               <th className="p-3.5">Ref & Date</th>
                               <th className="p-3.5">Citizen Name & Contact</th>
                               <th className="p-3.5">Barangay</th>
@@ -581,68 +721,103 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                            {filteredReports.map((report) => (
-                              <tr key={report.reference_code || report.id} className="hover:bg-slate-900/80 transition-colors">
-                                <td className="p-3.5 whitespace-nowrap">
-                                  <span className="font-mono font-bold text-yellow-400 block text-xs">
-                                    {report.reference_code}
-                                  </span>
-                                  <span className="text-[10px] text-slate-400 block mt-0.5">
-                                    {new Date(report.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                </td>
+                            {filteredReports.map((report) => {
+                              const isSelected = selectedRefCodes.includes(report.reference_code);
+                              return (
+                                <tr
+                                  key={report.reference_code || report.id}
+                                  className={`transition-colors ${isSelected ? 'bg-rose-950/30' : 'hover:bg-slate-900/80'}`}
+                                >
+                                  <td className="p-3.5 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleSelectReport(report.reference_code)}
+                                      className="text-slate-400 hover:text-yellow-400 transition-colors cursor-pointer"
+                                    >
+                                      {isSelected ? (
+                                        <CheckSquare className="w-4 h-4 text-yellow-400" />
+                                      ) : (
+                                        <Square className="w-4 h-4 text-slate-600" />
+                                      )}
+                                    </button>
+                                  </td>
 
-                                <td className="p-3.5">
-                                  <div className="font-bold text-white">{report.name}</div>
-                                  <div className="text-[11px] text-slate-400 font-mono">{report.contact}</div>
-                                </td>
-
-                                <td className="p-3.5 whitespace-nowrap">
-                                  <span className="bg-blue-950 text-blue-300 px-2 py-0.5 rounded-md font-semibold text-[11px] border border-blue-800">
-                                    {report.barangay}
-                                  </span>
-                                </td>
-
-                                <td className="p-3.5 whitespace-nowrap capitalize text-slate-300 font-medium">
-                                  {report.category}
-                                </td>
-
-                                <td className="p-3.5 max-w-xs">
-                                  <p className="line-clamp-2 text-slate-300 font-medium leading-relaxed">
-                                    {report.description}
-                                  </p>
-                                  {report.admin_notes && (
-                                    <p className="text-[10px] text-emerald-400 font-medium mt-1 line-clamp-1 italic">
-                                      LGU Note: {report.admin_notes}
-                                    </p>
-                                  )}
-                                </td>
-
-                                <td className="p-3.5 whitespace-nowrap">
-                                  {report.photo ? (
-                                    <span className="bg-emerald-950/80 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-800">
-                                      <ImageIcon className="w-3 h-3 text-emerald-400" /> Photo Attached
+                                  <td className="p-3.5 whitespace-nowrap">
+                                    <span className="font-mono font-bold text-yellow-400 block text-xs">
+                                      {report.reference_code}
                                     </span>
-                                  ) : (
-                                    <span className="text-[10px] text-slate-500 font-medium">No Attachment</span>
-                                  )}
-                                </td>
+                                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                                      {new Date(report.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </td>
 
-                                <td className="p-3.5 whitespace-nowrap">
-                                  {getStatusBadge(report.status)}
-                                </td>
+                                  <td className="p-3.5">
+                                    <div className="font-bold text-white">{report.name}</div>
+                                    <div className="text-[11px] text-slate-400 font-mono">{report.contact}</div>
+                                  </td>
 
-                                <td className="p-3.5 text-right whitespace-nowrap">
-                                  <button
-                                    onClick={() => handleInspectReport(report)}
-                                    className="bg-yellow-500 hover:bg-yellow-400 text-blue-950 font-black px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1 ml-auto cursor-pointer shadow-xs"
-                                  >
-                                    <Eye className="w-3.5 h-3.5" />
-                                    <span>Inspect & Resolve</span>
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
+                                  <td className="p-3.5 whitespace-nowrap">
+                                    <span className="bg-blue-950 text-blue-300 px-2 py-0.5 rounded-md font-semibold text-[11px] border border-blue-800">
+                                      {report.barangay}
+                                    </span>
+                                  </td>
+
+                                  <td className="p-3.5 whitespace-nowrap capitalize text-slate-300 font-medium">
+                                    {report.category}
+                                  </td>
+
+                                  <td className="p-3.5 max-w-xs">
+                                    <p className="line-clamp-2 text-slate-300 font-medium leading-relaxed">
+                                      {report.description}
+                                    </p>
+                                    {report.admin_notes && (
+                                      <p className="text-[10px] text-emerald-400 font-medium mt-1 line-clamp-1 italic">
+                                        LGU Note: {report.admin_notes}
+                                      </p>
+                                    )}
+                                  </td>
+
+                                  <td className="p-3.5 whitespace-nowrap">
+                                    {report.photo ? (
+                                      <span className="bg-emerald-950/80 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-800">
+                                        <ImageIcon className="w-3 h-3 text-emerald-400" /> Photo Attached
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] text-slate-500 font-medium">No Attachment</span>
+                                    )}
+                                  </td>
+
+                                  <td className="p-3.5 whitespace-nowrap">
+                                    {getStatusBadge(report.status)}
+                                  </td>
+
+                                  <td className="p-3.5 text-right whitespace-nowrap">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <button
+                                        onClick={() => handleInspectReport(report)}
+                                        className="bg-yellow-500 hover:bg-yellow-400 text-blue-950 font-black px-2.5 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+                                        title="Inspect / Edit Status"
+                                      >
+                                        <Eye className="w-3.5 h-3.5" />
+                                        <span>Edit / Inspect</span>
+                                      </button>
+
+                                      <button
+                                        onClick={() => setDeleteConfirmModal({
+                                          isOpen: true,
+                                          codes: [report.reference_code],
+                                          title: `Delete Report ${report.reference_code}`
+                                        })}
+                                        className="bg-red-950 hover:bg-red-900 text-red-300 hover:text-white border border-red-800 p-1.5 rounded-lg text-xs transition-colors cursor-pointer"
+                                        title="Delete Report"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -777,25 +952,69 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Photo Evidence if available */}
-                  {selectedReport.photo && (
-                    <div className="space-y-1">
+                  {/* Photo / Evidence Editor Section */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
                         <ImageIcon className="w-4 h-4 text-emerald-400" />
-                        <span>Photo / Landmark Evidence Attached</span>
+                        <span>Photo / Landmark Evidence</span>
                       </label>
-                      <div className="relative h-56 w-full rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => editFileInputRef.current?.click()}
+                          className="bg-blue-900 hover:bg-blue-800 text-yellow-300 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-blue-700 transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Upload className="w-3 h-3 text-yellow-400" />
+                          <span>{editPhoto ? 'Replace / Edit Photo' : 'Upload Evidence Photo'}</span>
+                        </button>
+                        {editPhoto && (
+                          <button
+                            type="button"
+                            onClick={handleRemovePhoto}
+                            className="bg-red-950 hover:bg-red-900 text-red-300 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-red-800 transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3 text-red-400" />
+                            <span>Remove Photo</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <input
+                      type="file"
+                      ref={editFileInputRef}
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+
+                    {editPhoto ? (
+                      <div className="relative h-56 w-full rounded-xl overflow-hidden border border-slate-700 bg-slate-950 group">
                         <Image
-                          src={selectedReport.photo}
+                          src={editPhoto}
                           alt="Citizen Evidence Photo"
                           fill
                           className="object-contain"
                           referrerPolicy="no-referrer"
                           unoptimized
                         />
+                        <div className="absolute bottom-2 right-2 bg-slate-900/90 border border-slate-700 text-slate-200 text-[10px] font-bold px-2 py-1 rounded-md backdrop-blur-xs flex items-center gap-1 pointer-events-none">
+                          <Edit3 className="w-3 h-3 text-yellow-400" />
+                          <span>Evidence Photo Attached</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <div
+                        onClick={() => editFileInputRef.current?.click()}
+                        className="p-5 border-2 border-dashed border-slate-800 hover:border-blue-600 rounded-xl bg-slate-950 text-center cursor-pointer transition-colors space-y-1"
+                      >
+                        <Upload className="w-6 h-6 text-slate-500 mx-auto" />
+                        <p className="text-xs font-semibold text-slate-400">No Photo Evidence attached</p>
+                        <p className="text-[10px] text-slate-500">Click here to upload or edit inspection photo (Max 5MB)</p>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Action Form */}
                   <form onSubmit={handleSaveStatus} className="space-y-4 pt-2 border-t border-slate-800">
@@ -829,27 +1048,85 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                       />
                     </div>
 
-                    <div className="flex items-center justify-end gap-3 pt-2">
+                    <div className="flex items-center justify-between gap-3 pt-2">
                       <button
                         type="button"
-                        onClick={() => window.print()}
-                        className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs py-2.5 px-4 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                        onClick={() => {
+                          setDeleteConfirmModal({
+                            isOpen: true,
+                            codes: [selectedReport.reference_code],
+                            title: `Delete Report ${selectedReport.reference_code}`
+                          });
+                        }}
+                        className="bg-red-950 hover:bg-red-900 text-red-300 hover:text-white border border-red-800 font-bold text-xs py-2.5 px-4 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                       >
-                        <Printer className="w-4 h-4" />
-                        <span>Print Work Order</span>
+                        <Trash2 className="w-4 h-4 text-red-400" />
+                        <span>Delete Report</span>
                       </button>
 
-                      <button
-                        type="submit"
-                        disabled={isSavingStatus}
-                        className="bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 text-blue-950 font-black text-xs py-2.5 px-5 rounded-xl transition-colors flex items-center gap-2 cursor-pointer shadow-md"
-                      >
-                        <Send className="w-4 h-4 text-blue-950" />
-                        <span>{isSavingStatus ? 'Updating Status...' : 'Save & Notify Citizen'}</span>
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => window.print()}
+                          className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs py-2.5 px-4 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Printer className="w-4 h-4" />
+                          <span>Print Work Order</span>
+                        </button>
+
+                        <button
+                          type="submit"
+                          disabled={isSavingStatus}
+                          className="bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 text-blue-950 font-black text-xs py-2.5 px-5 rounded-xl transition-colors flex items-center gap-2 cursor-pointer shadow-md"
+                        >
+                          <Send className="w-4 h-4 text-blue-950" />
+                          <span>{isSavingStatus ? 'Updating Status...' : 'Save & Notify Citizen'}</span>
+                        </button>
+                      </div>
                     </div>
                   </form>
 
+                </div>
+              </div>
+            )}
+
+            {/* Confirmation Modal for Delete Action */}
+            {deleteConfirmModal?.isOpen && (
+              <div className="fixed inset-0 z-70 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4">
+                <div className="bg-slate-900 border-2 border-red-600/80 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 text-slate-100">
+                  <div className="flex items-center gap-3 text-red-400 border-b border-slate-800 pb-3">
+                    <div className="p-2.5 bg-red-950 rounded-xl border border-red-800">
+                      <Trash2 className="w-6 h-6 text-red-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-white text-base">Confirm Delete Action</h3>
+                      <p className="text-xs text-slate-400">{deleteConfirmModal.title}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Are you sure you want to permanently delete <strong className="text-yellow-400">{deleteConfirmModal.codes.length}</strong> feedback record(s) ({deleteConfirmModal.codes.slice(0, 3).join(', ')}{deleteConfirmModal.codes.length > 3 ? '...' : ''})? This action will remove the record(s) from the LGU database.
+                  </p>
+
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      disabled={isDeleting}
+                      onClick={() => setDeleteConfirmModal(null)}
+                      className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isDeleting}
+                      onClick={() => handleDeleteReports(deleteConfirmModal.codes)}
+                      className="bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-colors flex items-center gap-2 cursor-pointer shadow-md"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>{isDeleting ? 'Deleting...' : 'Confirm Delete'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

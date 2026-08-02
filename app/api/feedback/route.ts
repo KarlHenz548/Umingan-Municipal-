@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseClient } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
   try {
@@ -192,7 +193,7 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { reference_code, status, admin_notes } = body;
+    const { reference_code, status, admin_notes, photo } = body;
 
     if (!reference_code) {
       return NextResponse.json({ error: 'Reference code is required.' }, { status: 400 });
@@ -205,6 +206,7 @@ export async function PATCH(req: NextRequest) {
       const updateData: Record<string, unknown> = {};
       if (status) updateData.status = status;
       if (admin_notes !== undefined) updateData.admin_notes = admin_notes;
+      if (photo !== undefined) updateData.photo = photo;
 
       const patchRes = await fetch(`${supabaseUrl}/rest/v1/citizen_feedback?reference_code=eq.${encodeURIComponent(reference_code)}`, {
         method: 'PATCH',
@@ -221,7 +223,7 @@ export async function PATCH(req: NextRequest) {
         const updated = await patchRes.json();
         return NextResponse.json({
           success: true,
-          message: 'Status updated successfully',
+          message: 'Report updated successfully',
           data: updated,
         });
       }
@@ -231,8 +233,124 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Status updated locally',
-      record: { reference_code, status, admin_notes },
+      message: 'Report updated locally',
+      record: { reference_code, status, admin_notes, photo },
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { reference_codes, reference_code, ids, id } = body;
+
+    const codesToDelete: string[] = Array.isArray(reference_codes)
+      ? reference_codes
+      : reference_code
+      ? [reference_code]
+      : [];
+
+    const idsToDelete: (string | number)[] = Array.isArray(ids)
+      ? ids
+      : id !== undefined && id !== null
+      ? [id]
+      : [];
+
+    if (codesToDelete.length === 0 && idsToDelete.length === 0) {
+      return NextResponse.json({ error: 'No reference code or ID provided for deletion.' }, { status: 400 });
+    }
+
+    let deletedFromSupabase = false;
+
+    // 1. Try deleting via Supabase JS Client
+    try {
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        if (codesToDelete.length > 0) {
+          const { error } = await supabase
+            .from('citizen_feedback')
+            .delete()
+            .in('reference_code', codesToDelete);
+
+          if (!error) {
+            deletedFromSupabase = true;
+          } else {
+            console.warn('Supabase Client Delete error (reference_code):', error.message);
+          }
+        }
+
+        if (idsToDelete.length > 0) {
+          const { error } = await supabase
+            .from('citizen_feedback')
+            .delete()
+            .in('id', idsToDelete);
+
+          if (!error) {
+            deletedFromSupabase = true;
+          } else {
+            console.warn('Supabase Client Delete error (id):', error.message);
+          }
+        }
+      }
+    } catch (clientErr) {
+      console.warn('Supabase Client Delete exception:', clientErr);
+    }
+
+    // 2. Direct REST Fallback if client wasn't available or didn't confirm
+    if (!deletedFromSupabase) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ketmrgmuhgelxdpqzxrq.supabase.co';
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_Zph252PPdN06eVnIiiNGaA_QdPFt9li';
+
+      try {
+        if (codesToDelete.length > 0) {
+          for (const code of codesToDelete) {
+            const deleteRes = await fetch(`${supabaseUrl}/rest/v1/citizen_feedback?reference_code=eq.${encodeURIComponent(code)}`, {
+              method: 'DELETE',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Prefer': 'return=representation',
+              },
+            });
+
+            if (deleteRes.ok) {
+              deletedFromSupabase = true;
+            }
+          }
+        }
+
+        if (idsToDelete.length > 0) {
+          for (const rawId of idsToDelete) {
+            const deleteRes = await fetch(`${supabaseUrl}/rest/v1/citizen_feedback?id=eq.${encodeURIComponent(String(rawId))}`, {
+              method: 'DELETE',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Prefer': 'return=representation',
+              },
+            });
+
+            if (deleteRes.ok) {
+              deletedFromSupabase = true;
+            }
+          }
+        }
+      } catch (restErr) {
+        console.warn('Supabase REST Delete exception:', restErr);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: deletedFromSupabase
+        ? `Successfully deleted record(s) from Supabase database.`
+        : `Record(s) removed locally.`,
+      deletedFromSupabase,
+      deletedCodes: codesToDelete,
+      deletedIds: idsToDelete,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Internal Server Error';

@@ -80,6 +80,23 @@ ON public.citizen_feedback
 FOR SELECT
 TO anon, authenticated
 USING (true);
+
+-- 6. Allow public update of feedback reports
+DROP POLICY IF EXISTS "Allow public update to citizen_feedback" ON public.citizen_feedback;
+CREATE POLICY "Allow public update to citizen_feedback"
+ON public.citizen_feedback
+FOR UPDATE
+TO anon, authenticated
+USING (true)
+WITH CHECK (true);
+
+-- 7. Allow public delete of feedback reports
+DROP POLICY IF EXISTS "Allow public delete from citizen_feedback" ON public.citizen_feedback;
+CREATE POLICY "Allow public delete from citizen_feedback"
+ON public.citizen_feedback
+FOR DELETE
+TO anon, authenticated
+USING (true);
 `;
 
 // Function to verify Supabase connection status & table availability
