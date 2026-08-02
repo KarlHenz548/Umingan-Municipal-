@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { 
   FileText, 
   Search, 
@@ -98,9 +99,12 @@ export const NewsSection: React.FC = () => {
         {!searchQuery && selectedCategory === 'All' && (
           <div className="bg-white rounded-2xl border-2 border-blue-900 shadow-md overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 hover:shadow-lg transition-shadow">
             <div className="lg:col-span-7 relative min-h-[280px] lg:min-h-[380px]">
-              <img 
+              <Image 
                 src={featuredArticle.image} 
                 alt={featuredArticle.title}
+                fill
+                unoptimized
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-4 left-4 bg-yellow-500 text-blue-950 text-[11px] font-extrabold px-3 py-1 rounded-md shadow-md uppercase tracking-wider border border-yellow-400">
@@ -173,9 +177,12 @@ export const NewsSection: React.FC = () => {
             >
               <div>
                 <div className="relative h-48 overflow-hidden bg-slate-100">
-                  <img 
+                  <Image 
                     src={article.image} 
                     alt={article.title}
+                    fill
+                    unoptimized
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <span className="absolute top-3 left-3 bg-blue-900 text-yellow-400 text-[10px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider border border-yellow-500/40">
@@ -271,10 +278,13 @@ export const NewsSection: React.FC = () => {
               </p>
             </div>
 
-            <div className="rounded-xl overflow-hidden max-h-72 bg-slate-100">
-              <img 
+            <div className="relative rounded-xl overflow-hidden h-64 bg-slate-100">
+              <Image 
                 src={activeArticle.image} 
                 alt={activeArticle.title}
+                fill
+                unoptimized
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />
             </div>

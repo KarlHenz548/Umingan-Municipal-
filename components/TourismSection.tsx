@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { 
   Compass, 
   MapPin, 
@@ -17,26 +18,67 @@ import {
   UtensilsCrossed,
   Trees,
   Landmark,
-  ArrowRight
+  ArrowRight,
+  Search
 } from 'lucide-react';
 import { TOURIST_SPOTS, TouristSpot } from '@/lib/umingan-data';
 
 export const TourismSection: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState<string>('Nature & Adventure');
   const [selectedSpot, setSelectedSpot] = useState<TouristSpot | null>(null);
   const [itineraryModalOpen, setItineraryModalOpen] = useState<boolean>(false);
   const [tripType, setTripType] = useState<'day' | 'weekend' | 'food'>('day');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showAllItems, setShowAllItems] = useState<boolean>(false);
 
-  const categories = [
-    'All',
-    'Nature & Adventure',
-    'Parks & Recreation',
-    'Local Dining'
+  const categoryCards = [
+    {
+      id: 'Nature & Adventure',
+      title: 'Nature & Adventure',
+      subtitle: 'Trekking trails, peaks, waterfalls, rivers & adventure farms',
+      icon: Trees,
+      badgeColor: 'bg-emerald-500 text-slate-950 border-emerald-400',
+      activeBorder: 'border-emerald-400 bg-emerald-950/60 text-white',
+      inactiveBorder: 'border-blue-900 bg-blue-900/50 hover:bg-blue-900/80 text-blue-100',
+      count: TOURIST_SPOTS.filter(s => s.category === 'Nature & Adventure').length
+    },
+    {
+      id: 'Parks & Recreation',
+      title: 'Parks & Recreation',
+      subtitle: 'Town plazas, heritage landmarks, churches & family parks',
+      icon: Landmark,
+      badgeColor: 'bg-yellow-500 text-blue-950 border-yellow-400',
+      activeBorder: 'border-yellow-400 bg-yellow-950/60 text-white',
+      inactiveBorder: 'border-blue-900 bg-blue-900/50 hover:bg-blue-900/80 text-blue-100',
+      count: TOURIST_SPOTS.filter(s => s.category === 'Parks & Recreation').length
+    },
+    {
+      id: 'Local Dining',
+      title: 'Local Dining',
+      subtitle: 'Hot Tupig markets, garden cafés, kambingan & native eateries',
+      icon: UtensilsCrossed,
+      badgeColor: 'bg-orange-500 text-slate-950 border-orange-400',
+      activeBorder: 'border-orange-400 bg-amber-950/60 text-white',
+      inactiveBorder: 'border-blue-900 bg-blue-900/50 hover:bg-blue-900/80 text-blue-100',
+      count: TOURIST_SPOTS.filter(s => s.category === 'Local Dining').length
+    }
   ];
 
-  const filteredSpots = TOURIST_SPOTS.filter(spot => 
-    selectedCategory === 'All' || spot.category === selectedCategory
-  );
+  const filteredSpots = TOURIST_SPOTS.filter(spot => {
+    const matchesCategory = selectedCategory === 'All' || spot.category === selectedCategory;
+    const matchesSearch = spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          spot.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          spot.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // Limit shown items when showAllItems is false to keep page compact
+  const visibleSpots = showAllItems ? filteredSpots : filteredSpots.slice(0, 3);
+
+  const handleSelectCategory = (catId: string) => {
+    setSelectedCategory(catId);
+    setShowAllItems(false); // Reset to compact view on category change
+  };
 
   return (
     <section className="py-12 bg-blue-950 text-white min-h-screen">
@@ -66,83 +108,181 @@ export const TourismSection: React.FC = () => {
           </button>
         </div>
 
-        {/* Category Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
-                selectedCategory === cat
-                  ? 'bg-yellow-500 text-blue-950 shadow-md border border-yellow-400'
-                  : 'bg-blue-900 text-blue-100 hover:bg-blue-800 border border-blue-800'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* Interactive Category Selector Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {categoryCards.map((cat) => {
+            const Icon = cat.icon;
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleSelectCategory(cat.id)}
+                className={`p-5 rounded-2xl border-2 transition-all cursor-pointer text-left flex flex-col justify-between space-y-3 relative overflow-hidden group shadow-md ${
+                  isSelected ? cat.activeBorder : cat.inactiveBorder
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className={`p-3 rounded-xl border ${isSelected ? 'bg-yellow-500 text-blue-950 border-yellow-400' : 'bg-blue-950 text-yellow-400 border-blue-800'}`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <span className={`text-xs font-black px-2.5 py-1 rounded-full border uppercase tracking-wider ${cat.badgeColor}`}>
+                    {cat.count} Spots
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-base font-black uppercase tracking-tight text-white group-hover:text-yellow-400 transition-colors">
+                    {cat.title}
+                  </h3>
+                  <p className="text-xs text-blue-200 mt-1 font-medium leading-relaxed">
+                    {cat.subtitle}
+                  </p>
+                </div>
+
+                <div className="flex items-center text-xs font-bold text-yellow-400 gap-1 pt-1 uppercase tracking-wider">
+                  <span>{isSelected ? 'Currently Viewing' : 'Click to Explore Category'}</span>
+                  <ArrowRight className={`w-3.5 h-3.5 transition-transform ${isSelected ? 'rotate-90' : 'group-hover:translate-x-1'}`} />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Filter Controls Bar (Search + Quick Reset) */}
+        <div className="bg-blue-900/60 p-4 rounded-2xl border border-blue-800 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="relative w-full md:w-80">
+            <Search className="w-4 h-4 text-blue-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={`Search in ${selectedCategory === 'All' ? 'all spots' : selectedCategory}...`}
+              className="w-full bg-blue-950 text-white placeholder-blue-300 text-xs font-medium pl-10 pr-4 py-2.5 rounded-xl border border-blue-700 focus:outline-none focus:border-yellow-400"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+            <span className="text-xs text-blue-300 font-bold uppercase tracking-wider whitespace-nowrap">Category:</span>
+            {['All', 'Nature & Adventure', 'Parks & Recreation', 'Local Dining'].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => handleSelectCategory(cat)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-yellow-500 text-blue-950 font-black shadow-xs'
+                    : 'bg-blue-950 text-blue-200 hover:text-white border border-blue-800'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tourist Spots Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSpots.map((spot) => (
-            <div
-              key={spot.id}
-              onClick={() => setSelectedSpot(spot)}
-              className="group bg-blue-900 rounded-2xl border-2 border-blue-800 overflow-hidden hover:border-yellow-500 transition-all cursor-pointer flex flex-col justify-between shadow-lg"
+        {filteredSpots.length === 0 ? (
+          <div className="bg-blue-900/40 border-2 border-dashed border-blue-800 rounded-2xl p-8 text-center space-y-3">
+            <Compass className="w-10 h-10 text-yellow-400 mx-auto" />
+            <h3 className="text-sm font-black uppercase text-white">No spots found</h3>
+            <p className="text-xs text-blue-200">Try clearing your search query or selecting a different category.</p>
+            <button
+              onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+              className="bg-yellow-500 text-blue-950 font-extrabold text-xs px-4 py-2 rounded-xl uppercase tracking-wider cursor-pointer"
             >
-              <div>
-                <div className="relative h-52 overflow-hidden">
-                  <img 
-                    src={spot.image} 
-                    alt={spot.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 left-3 bg-yellow-500 text-blue-950 text-[10px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider border border-yellow-400 shadow-md">
-                    {spot.category}
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {visibleSpots.map((spot) => (
+                <div
+                  key={spot.id}
+                  onClick={() => setSelectedSpot(spot)}
+                  className="group bg-blue-900 rounded-2xl border-2 border-blue-800 overflow-hidden hover:border-yellow-500 transition-all cursor-pointer flex flex-col justify-between shadow-lg"
+                >
+                  <div>
+                    <div className="relative h-52 overflow-hidden">
+                      <Image 
+                        src={spot.image} 
+                        alt={spot.name}
+                        fill
+                        unoptimized
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 left-3 bg-yellow-500 text-blue-950 text-[10px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider border border-yellow-400 shadow-md">
+                        {spot.category}
+                      </div>
+                      <div className="absolute bottom-3 right-3 bg-blue-950/90 backdrop-blur-xs text-yellow-400 text-xs font-black px-2.5 py-1 rounded-md flex items-center gap-1 border border-yellow-500/30">
+                        <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                        <span>{spot.rating}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-5 space-y-3">
+                      <h3 className="text-base font-black text-white group-hover:text-yellow-400 transition-colors leading-tight uppercase">
+                        {spot.name}
+                      </h3>
+
+                      <p className="text-xs text-blue-200 flex items-center gap-1 font-semibold">
+                        <MapPin className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                        <span className="truncate">{spot.location}</span>
+                      </p>
+
+                      <p className="text-xs text-blue-100/90 line-clamp-2 leading-relaxed font-normal">
+                        {spot.description}
+                      </p>
+
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {spot.highlights.slice(0, 3).map((hl, i) => (
+                          <span key={i} className="bg-blue-950 text-yellow-300 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-800 uppercase">
+                            {hl}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="absolute bottom-3 right-3 bg-blue-950/90 backdrop-blur-xs text-yellow-400 text-xs font-black px-2.5 py-1 rounded-md flex items-center gap-1 border border-yellow-500/30">
-                    <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                    <span>{spot.rating}</span>
+
+                  <div className="p-5 pt-0 border-t border-blue-800/80 mt-3 flex items-center justify-between text-xs">
+                    <span className="text-blue-200 text-[11px] font-medium">
+                      Fee: <strong className="text-yellow-400 font-bold">{spot.entranceFee}</strong>
+                    </span>
+                    <span className="text-yellow-400 font-extrabold uppercase tracking-wider flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      Explore Details
+                      <ArrowRight className="w-3.5 h-3.5 text-yellow-400" />
+                    </span>
                   </div>
                 </div>
-
-                <div className="p-5 space-y-3">
-                  <h3 className="text-base font-black text-white group-hover:text-yellow-400 transition-colors leading-tight uppercase">
-                    {spot.name}
-                  </h3>
-
-                  <p className="text-xs text-blue-200 flex items-center gap-1 font-semibold">
-                    <MapPin className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                    <span className="truncate">{spot.location}</span>
-                  </p>
-
-                  <p className="text-xs text-blue-100/90 line-clamp-2 leading-relaxed font-normal">
-                    {spot.description}
-                  </p>
-
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {spot.highlights.slice(0, 3).map((hl, i) => (
-                      <span key={i} className="bg-blue-950 text-yellow-300 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-800 uppercase">
-                        {hl}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-5 pt-0 border-t border-blue-800/80 mt-3 flex items-center justify-between text-xs">
-                <span className="text-blue-200 text-[11px] font-medium">
-                  Fee: <strong className="text-yellow-400 font-bold">{spot.entranceFee}</strong>
-                </span>
-                <span className="text-yellow-400 font-extrabold uppercase tracking-wider flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  Explore Details
-                  <ArrowRight className="w-3.5 h-3.5 text-yellow-400" />
-                </span>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+
+            {/* Show More / Show Less Toggle Button to prevent overly long page */}
+            {filteredSpots.length > 3 && (
+              <div className="text-center pt-2">
+                <button
+                  onClick={() => setShowAllItems(!showAllItems)}
+                  className="bg-blue-900 hover:bg-yellow-500 hover:text-blue-950 text-yellow-400 border-2 border-yellow-500 font-extrabold text-xs px-6 py-3 rounded-xl transition-all cursor-pointer uppercase tracking-wider inline-flex items-center gap-2 shadow-lg"
+                >
+                  <span>
+                    {showAllItems 
+                      ? 'Collapse List (Show Top 3)' 
+                      : `View All ${filteredSpots.length} Spots in ${selectedCategory}`}
+                  </span>
+                  <ArrowRight className={`w-4 h-4 transition-transform ${showAllItems ? '-rotate-90' : 'rotate-90'}`} />
+                </button>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Spot Detail Modal */}
         {selectedSpot && (
@@ -172,8 +312,8 @@ export const TourismSection: React.FC = () => {
                 </p>
               </div>
 
-              <div className="rounded-xl overflow-hidden max-h-80 bg-blue-900 border border-blue-800">
-                <img src={selectedSpot.image} alt={selectedSpot.name} className="w-full h-full object-cover" />
+              <div className="relative rounded-xl overflow-hidden h-64 bg-blue-900 border border-blue-800">
+                <Image src={selectedSpot.image} alt={selectedSpot.name} fill unoptimized referrerPolicy="no-referrer" className="w-full h-full object-cover" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-blue-900/90 p-4 rounded-xl border border-blue-800 text-xs">

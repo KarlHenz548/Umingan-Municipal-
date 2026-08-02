@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { 
   Building2, 
   Search, 
@@ -63,9 +64,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     <div className="relative bg-gradient-to-r from-blue-950 via-blue-900 to-indigo-950 text-white overflow-hidden border-b-2 border-blue-800">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
-        <img 
+        <Image 
           src="https://picsum.photos/seed/umingan_mountain_landscape/1920/1080" 
           alt="Umingan Pangasinan Landscape"
+          fill
+          priority
+          unoptimized
+          referrerPolicy="no-referrer"
           className="w-full h-full object-cover object-center opacity-25 scale-105 transition-transform duration-1000"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-blue-950 via-blue-900/85 to-indigo-950/75" />
@@ -84,7 +89,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight uppercase">
               Sulong Umingan: <br />
               <span className="text-yellow-400">
-                The Development Masterplan 2025
+                The Development Masterplan 2026
               </span>
             </h1>
 
@@ -146,9 +151,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {/* Mayor Card */}
             <div className="bg-blue-900/90 p-6 rounded-2xl border-2 border-yellow-500 shadow-2xl space-y-4 text-white">
               <div className="flex items-center gap-3">
-                <img 
+                <Image 
                   src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80" 
                   alt={TOWN_DETAILS.mayor} 
+                  width={64}
+                  height={64}
+                  priority
+                  unoptimized
+                  referrerPolicy="no-referrer"
                   className="w-16 h-16 rounded-full object-cover border-2 border-yellow-400 shadow-md shrink-0"
                 />
                 <div>
@@ -262,9 +272,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </button>
 
             <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
-              <img 
+              <Image 
                 src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80" 
                 alt={TOWN_DETAILS.mayor} 
+                width={64}
+                height={64}
+                unoptimized
+                referrerPolicy="no-referrer"
                 className="w-16 h-16 rounded-full object-cover border-2 border-blue-900 shadow-md"
               />
               <div>
