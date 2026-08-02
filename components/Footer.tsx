@@ -178,7 +178,7 @@ export const Footer: React.FC<FooterProps> = ({
         <div className="pt-6 border-t border-emerald-900 flex flex-col items-center justify-center text-xs text-emerald-400/80 gap-3 text-center">
           <p>© {new Date().getFullYear()} Local Government Unit of Umingan, Pangasinan. All Rights Reserved.</p>
           <p className="text-emerald-300 font-medium text-center w-full">
-            Site Created by <span className="text-amber-300 font-bold">Karl Hen&apos;z Ferrer</span>
+            Created by <span className="text-amber-300 font-bold">Karl Hen&apos;z Ferrer</span>
           </p>
           <div className="flex items-center justify-center gap-1.5 text-emerald-300">
             <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
