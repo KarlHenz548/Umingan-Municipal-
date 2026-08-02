@@ -83,7 +83,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <div className="lg:col-span-7 space-y-6 text-left">
             <div className="inline-flex items-center gap-2 bg-yellow-500 text-blue-950 border border-yellow-400 px-3.5 py-1 rounded-md text-[11px] font-extrabold uppercase tracking-widest shadow-md">
               <ShieldCheck className="w-4 h-4 text-blue-950" />
-              <span>Official Digital Gateway • Umingan Pangasinan</span>
+              <span>Official Municipal Website • Umingan Pangasinan</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight uppercase">
