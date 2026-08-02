@@ -173,6 +173,7 @@ export const GrievanceDeskModal: React.FC<GrievanceDeskModalProps> = ({
                   <option value="garbage">Garbage / Solid Waste Collection Request</option>
                   <option value="health">Health, Sanitation & Stray Animal Concern</option>
                   <option value="appreciation">Commendation or General Public Suggestion</option>
+                  <option value="appreciation">Other Concern or Feedback</option>
                 </select>
               </div>
 
@@ -186,7 +187,7 @@ export const GrievanceDeskModal: React.FC<GrievanceDeskModalProps> = ({
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Juan Dela Cruz"
+                    placeholder="Enter Full Name"
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-emerald-700"
                   />
                 </div>
@@ -200,7 +201,7 @@ export const GrievanceDeskModal: React.FC<GrievanceDeskModalProps> = ({
                     required
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
-                    placeholder="0917-000-0000"
+                    placeholder="0912-345-6789"
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-emerald-700"
                   />
                 </div>
@@ -231,7 +232,7 @@ export const GrievanceDeskModal: React.FC<GrievanceDeskModalProps> = ({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe the issue, street name, nearest landmark..."
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-emerald-700"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-emerald-700 resize-none"
                 />
               </div>
 

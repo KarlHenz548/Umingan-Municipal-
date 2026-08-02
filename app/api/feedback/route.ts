@@ -141,12 +141,12 @@ export async function GET() {
 
 
 // ==========================================
-// 3. PATCH: UPDATE STATUS / NOTES / PHOTO
+// 3. PATCH: UPDATE STATUS / NOTES / PHOTO / CATEGORY
 // ==========================================
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { reference_code, id, status, admin_notes, notes, remarks, photo } = body;
+    const { reference_code, id, category, status, admin_notes, notes, remarks, photo } = body;
 
     if (!reference_code && !id) {
       return NextResponse.json(
@@ -155,8 +155,9 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Prepare fields to update (support multiple naming conventions for safety)
+    // Prepare fields to update
     const updateData: Record<string, unknown> = {};
+    if (category !== undefined) updateData.category = category; // 👈 DINAGDAG DITO
     if (status !== undefined) updateData.status = status;
     
     // Check notes/admin_notes value
@@ -193,6 +194,7 @@ export async function PATCH(req: NextRequest) {
           
           // Retry with minimal payload if unknown column was provided
           const safeData: Record<string, unknown> = {};
+          if (category !== undefined) safeData.category = category;
           if (status !== undefined) safeData.status = status;
           if (photo !== undefined) safeData.photo = photo;
           

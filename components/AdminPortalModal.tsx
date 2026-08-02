@@ -19,7 +19,6 @@ import {
   Eye, 
   Send, 
   Building2, 
-  Sparkles,
   Users,
   Image as ImageIcon,
   Check,
@@ -69,6 +68,17 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
   // Admin Tab selection
   const [adminTab, setAdminTab] = useState<'feedback' | 'services' | 'announcements'>('feedback');
 
+  // Selected Report for Detail / Resolution Inspector
+  const [selectedReport, setSelectedReport] = useState<FeedbackRecord | null>(null);
+  const [newStatus, setNewStatus] = useState<string>('pending');
+  const [editCategory, setEditCategory] = useState<string>('');
+  const [adminNote, setAdminNote] = useState<string>('');
+  const [editPhoto, setEditPhoto] = useState<string | null>(null);
+  const [isSavingStatus, setIsSavingStatus] = useState<boolean>(false);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+
   // Feedback State
   const [feedbackList, setFeedbackList] = useState<FeedbackRecord[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -85,16 +95,6 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     title: string;
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
-
-  // Selected Report for Detail / Resolution Inspector
-  const [selectedReport, setSelectedReport] = useState<FeedbackRecord | null>(null);
-  const [newStatus, setNewStatus] = useState<string>('pending');
-  const [adminNote, setAdminNote] = useState<string>('');
-  const [editPhoto, setEditPhoto] = useState<string | null>(null);
-  const [isSavingStatus, setIsSavingStatus] = useState<boolean>(false);
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
-
-  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch Feedback Reports
   const fetchReports = useCallback(async () => {
@@ -124,6 +124,16 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
   }, [isOpen, isLoggedIn, fetchReports]);
 
   if (!isOpen) return null;
+
+  // Open Report Detail Inspector
+  const handleInspectReport = (report: FeedbackRecord) => {
+    setSelectedReport(report);
+    setNewStatus(report.status || 'pending');
+    setEditCategory(report.category || 'streetlight');
+    setAdminNote(report.admin_notes || '');
+    setEditPhoto(report.photo || null);
+    setSaveSuccessMsg(null);
+  };
 
   // Handle Login via Supabase Auth API
   const handleLogin = async (e: React.FormEvent) => {
@@ -164,15 +174,6 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     setSelectedReport(null);
   };
 
-  // Open Report Detail Inspector
-  const handleInspectReport = (report: FeedbackRecord) => {
-    setSelectedReport(report);
-    setNewStatus(report.status || 'pending');
-    setAdminNote(report.admin_notes || '');
-    setEditPhoto(report.photo || null);
-    setSaveSuccessMsg(null);
-  };
-
   // Photo handlers for editing evidence
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -202,9 +203,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     }
   };
 
-  
-
-  // Update Status, Admin Notes & Evidence Photo
+  // Update Status, Category, Admin Notes & Evidence Photo
   const handleSaveStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedReport) return;
@@ -219,18 +218,19 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
         body: JSON.stringify({
           reference_code: selectedReport.reference_code,
           status: newStatus,
+          category: editCategory,
           admin_notes: adminNote,
           photo: editPhoto
         })
       });
 
       if (res.ok) {
-        // Update local state list
         setFeedbackList(prev => prev.map(item => {
           if (item.reference_code === selectedReport.reference_code) {
             return {
               ...item,
               status: newStatus,
+              category: editCategory,
               admin_notes: adminNote,
               photo: editPhoto || undefined
             };
@@ -241,11 +241,12 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
         setSelectedReport(prev => prev ? {
           ...prev,
           status: newStatus,
+          category: editCategory,
           admin_notes: adminNote,
           photo: editPhoto || undefined
         } : null);
 
-        setSaveSuccessMsg('Report details, action notes & photo evidence saved successfully!');
+        setSaveSuccessMsg('Report details, category, action notes & photo evidence saved successfully!');
         setTimeout(() => setSaveSuccessMsg(null), 3000);
       }
     } catch (err) {
@@ -272,7 +273,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     }
   };
 
- // Perform deletion API call directly to /api/feedback
+  // Perform deletion API call
   const handleDeleteReports = async (codes: string[]) => {
     if (codes.length === 0) return;
     setIsDeleting(true);
@@ -289,7 +290,6 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
       });
 
       if (res.ok) {
-        // Alisin sa local UI state ang mga nabura
         setFeedbackList(prev => prev.filter(item => !codes.includes(item.reference_code)));
         setSelectedRefCodes(prev => prev.filter(code => !codes.includes(code)));
 
@@ -392,11 +392,8 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
         )}
 
         {!isLoggedIn ? (
-          /* ========================================================= */
-          /* ADMIN LOGIN SCREEN                                         */
-          /* ========================================================= */
+          /* ADMIN LOGIN SCREEN */
           <div className="p-6 sm:p-12 my-auto max-w-md mx-auto w-full space-y-6 text-center">
-            
             <div className="space-y-2">
               <div className="w-16 h-16 bg-blue-950 rounded-2xl border-2 border-yellow-500 shadow-lg flex items-center justify-center mx-auto text-yellow-400">
                 <ShieldCheck className="w-9 h-9" />
@@ -462,12 +459,9 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                 Protected LGU Administrator Access. Authenticates via Supabase Auth.
               </p>
             </div>
-
           </div>
         ) : (
-          /* ========================================================= */
-          /* AUTHENTICATED ADMIN DASHBOARD VIEW                          */
-          /* ========================================================= */
+          /* AUTHENTICATED ADMIN DASHBOARD VIEW */
           <>
             {/* Admin Header Bar */}
             <div className="bg-blue-950 p-4 sm:p-5 border-b border-blue-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
@@ -1027,6 +1021,27 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
 
                   {/* Action Form */}
                   <form onSubmit={handleSaveStatus} className="space-y-4 pt-2 border-t border-slate-800">
+                    
+                    {/* Category Selection Dropdown */}
+                    <div>
+                      <label className="block text-xs font-bold text-yellow-400 uppercase tracking-wider mb-1">
+                        Category / Issue Type
+                      </label>
+                      <select
+                        value={editCategory}
+                        onChange={(e) => setEditCategory(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-yellow-400"
+                      >
+                        <option value="streetlight">Broken Streetlight / Electric Line</option>
+                        <option value="road">Road Potholes, Canal & Drainage Maintenance</option>
+                        <option value="garbage">Garbage / Solid Waste Collection Request</option>
+                        <option value="health">Health Sanitation & Stray Animal Concern</option>
+                        <option value="appreciation">Commendation or General Public Suggestion</option>
+                        <option value="appreciation">Other Concern or Feedback</option>
+                      </select>
+                    </div>
+
+                    {/* Status Dropdown */}
                     <div>
                       <label className="block text-xs font-bold text-yellow-400 uppercase tracking-wider mb-1">
                         Update Report Action Status
@@ -1044,6 +1059,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                       </select>
                     </div>
 
+                    {/* Action Officer Remarks */}
                     <div>
                       <label className="block text-xs font-bold text-yellow-400 uppercase tracking-wider mb-1">
                         Action Officer Remarks / Resolution Note
