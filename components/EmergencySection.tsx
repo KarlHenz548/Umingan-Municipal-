@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   ShieldAlert, 
   PhoneCall, 
@@ -10,18 +10,97 @@ import {
   Zap, 
   AlertTriangle, 
   CheckCircle2, 
-  Waves, 
   CloudRain, 
+  Sun,
+  CloudSun,
+  CloudLightning,
+  Thermometer,
+  Wind,
+  Droplets,
   MapPin, 
   Info,
   Building,
-  Briefcase
+  Briefcase,
+  Eye
 } from 'lucide-react';
 import { EMERGENCY_CONTACTS } from '@/lib/umingan-data';
 
+interface LiveWeather {
+  temp: number;
+  feelsLike: number;
+  humidity: number;
+  windSpeed: number;
+  weatherCode: number;
+  condition: string;
+  source?: string;
+  isLive: boolean;
+  lastUpdated: string;
+}
+
 export const EmergencySection: React.FC = () => {
-  const [riverLevel, setRiverLevel] = useState<number>(1.8); // meters
-  const [waterStatus, setWaterStatus] = useState<'Normal' | 'Alert' | 'Warning'>('Normal');
+  const [weather, setWeather] = useState<LiveWeather>({
+    temp: 31,
+    feelsLike: 35,
+    humidity: 78,
+    windSpeed: 12,
+    weatherCode: 2,
+    condition: 'Partly Cloudy with Localized Afternoon Showers',
+    source: 'OpenWeatherMap Telemetry',
+    isLive: false,
+    lastUpdated: 'Loading live telemetry...'
+  });
+  const [isFetchingWeather, setIsFetchingWeather] = useState<boolean>(false);
+
+  // Fetch real-time weather for Umingan, Pangasinan via OpenWeatherMap API Route (/api/weather)
+  const fetchLiveWeather = useCallback(async () => {
+    setIsFetchingWeather(true);
+    try {
+      const res = await fetch('/api/weather');
+      if (res.ok) {
+        const data = await res.json();
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        setWeather({
+          temp: data.temp,
+          feelsLike: data.feelsLike,
+          humidity: data.humidity,
+          windSpeed: data.windSpeed,
+          weatherCode: data.mainCondition === 'Clear' ? 0 : data.mainCondition === 'Clouds' ? 2 : 80,
+          condition: data.condition,
+          source: data.source || 'OpenWeatherMap API',
+          isLive: data.isLive ?? true,
+          lastUpdated: `Live Sync ${timeStr}`
+        });
+      }
+    } catch (err) {
+      console.warn('Weather API endpoint error:', err);
+    } finally {
+      setIsFetchingWeather(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncWeather = async () => {
+      if (isMounted) {
+        await fetchLiveWeather();
+      }
+    };
+
+    syncWeather();
+
+    // Auto-sync real-time weather telemetry every 3 minutes (180,000 ms)
+    const interval = setInterval(() => {
+      syncWeather();
+    }, 180000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [fetchLiveWeather]);
 
   return (
     <section className="py-12 bg-slate-900 text-white min-h-screen">
@@ -34,86 +113,126 @@ export const EmergencySection: React.FC = () => {
             MDRRMO Umingan Disaster Operations Center
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Emergency Hotlines, Flood Gauges & Weather Bulletins
+            Emergency Hotlines & Local Weather Bulletins
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 mt-1">
-            24/7 active emergency response teams, Barat River water level monitoring, and designated evacuation centers.
+            24/7 active emergency response teams, live PAGASA weather telemetry, and designated evacuation centers.
           </p>
         </div>
 
-        {/* Live Weather & River Telemetry Gauges Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* River Telemetry Meter */}
-          <div className="lg:col-span-6 bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl border border-white/10 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-xs font-bold text-teal-400 uppercase">
-                <Waves className="w-4 h-4" />
-                Barat River Telemetry Water Level Gauge
-              </span>
-              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
-                Status: {waterStatus}
-              </span>
-            </div>
+        {/* Live Weather Advisory Card / Real-Time Summary Widget */}
+        <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 p-6 sm:p-7 rounded-2xl border border-white/10 space-y-6 shadow-xl relative overflow-hidden">
+          {/* Subtle background glow */}
+          <div className="absolute -right-12 -top-12 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="flex items-center justify-between pt-2">
+          {/* Widget Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4 relative z-10">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <CloudRain className="w-4 h-4" />
+              </span>
               <div>
-                <p className="text-4xl font-black text-white font-mono">{riverLevel.toFixed(1)} <span className="text-sm font-normal text-slate-400">meters</span></p>
-                <p className="text-xs text-slate-300 mt-1">Barat River Spillway Monitor (Barangay Barat)</p>
-              </div>
-              <div className="text-right text-xs text-slate-400 space-y-1">
-                <p>Normal Level: &lt; 2.5m</p>
-                <p className="text-amber-400">Alert Level: 2.5m - 4.0m</p>
-                <p className="text-rose-400">Critical Evac Level: &gt; 4.0m</p>
+                <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                  Local PAGASA / MDRRMO Weather Bulletin
+                </h3>
+                <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                  <MapPin className="w-3 h-3 text-yellow-500" />
+                  <span>Umingan, Pangasinan (Lat 15.9238° N, Long 120.8410° E)</span>
+                </p>
               </div>
             </div>
 
-            <div className="w-full bg-slate-700 h-3 rounded-full overflow-hidden relative">
-              <div 
-                className="bg-teal-400 h-full transition-all duration-500" 
-                style={{ width: `${(riverLevel / 5.0) * 100}%` }} 
-              />
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-              <span>Updated: Just Now</span>
-              <span>Telemetry Sensor #04 (MDRRMO)</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-950 text-blue-300 border border-blue-800/80 shadow-xs">
+                Weather Live
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/60 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                {weather.lastUpdated}
+              </span>
             </div>
           </div>
 
-          {/* Weather Advisory Card */}
-          <div className="lg:col-span-6 bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl border border-white/10 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase">
-                <CloudRain className="w-4 h-4" />
-                Local PAGASA / MDRRMO Weather Bulletin
-              </span>
-              <span className="text-slate-400 text-xs">Umingan Area</span>
+          {/* Main Summary Hero Display */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center relative z-10">
+            
+            {/* Left: Temp & Weather Icon */}
+            <div className="md:col-span-5 flex items-center gap-4 bg-slate-900/80 p-4 rounded-2xl border border-white/5">
+              <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-400 shrink-0">
+                {weather.weatherCode === 0 ? (
+                  <Sun className="w-10 h-10 text-amber-400 animate-spin-slow" />
+                ) : weather.weatherCode >= 1 && weather.weatherCode <= 3 ? (
+                  <CloudSun className="w-10 h-10 text-yellow-400" />
+                ) : weather.weatherCode >= 80 ? (
+                  <CloudLightning className="w-10 h-10 text-rose-400" />
+                ) : (
+                  <CloudRain className="w-10 h-10 text-blue-400" />
+                )}
+              </div>
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl sm:text-5xl font-black text-white font-mono tracking-tight">
+                    {weather.temp}°C
+                  </span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    ({Math.round((weather.temp * 9) / 5 + 32)}°F)
+                  </span>
+                </div>
+                <p className="text-xs font-semibold text-amber-400 mt-0.5 flex items-center gap-1">
+                  <Thermometer className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Feels Like: <strong>{weather.feelsLike}°C</strong></span>
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold text-white">Partly Cloudy with Light Afternoon Showers</h3>
+            {/* Right: Weather Description & Forecast Note */}
+            <div className="md:col-span-7 space-y-2">
+              <div className="inline-block px-2.5 py-0.5 rounded-md bg-blue-950 text-blue-300 border border-blue-800 text-[11px] font-bold uppercase tracking-wider">
+                Current Condition
+              </div>
+              <h4 className="text-lg sm:text-xl font-extrabold text-white leading-tight">
+                {weather.condition}
+              </h4>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Light to moderate localized thunderstorms expected over eastern mountainous barangays (Esperanza, Salasa) late afternoon. No typhoon Signal in effect for Pangasinan.
+                MDRRMO live weather telemetry for Eastern Pangasinan agricultural plains and foothills. Light to moderate localized rain showers monitored.
               </p>
             </div>
+          </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10 text-center text-xs">
-              <div className="bg-slate-900 p-2 rounded-xl border border-white/5">
-                <span className="text-slate-400 text-[10px] block">Temperature</span>
-                <span className="font-bold text-white">31°C</span>
+          {/* Key Metrics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 relative z-10">
+            <div className="bg-slate-900/90 p-3.5 rounded-xl border border-white/5 flex items-center gap-3">
+              <Thermometer className="w-5 h-5 text-amber-400 shrink-0" />
+              <div>
+                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Temperature</span>
+                <span className="font-extrabold text-white text-sm">{weather.temp}°C</span>
               </div>
-              <div className="bg-slate-900 p-2 rounded-xl border border-white/5">
-                <span className="text-slate-400 text-[10px] block">Humidity</span>
-                <span className="font-bold text-white">78%</span>
+            </div>
+
+            <div className="bg-slate-900/90 p-3.5 rounded-xl border border-white/5 flex items-center gap-3">
+              <Thermometer className="w-5 h-5 text-rose-400 shrink-0" />
+              <div>
+                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Heat Index</span>
+                <span className="font-extrabold text-white text-sm">{weather.feelsLike}°C</span>
               </div>
-              <div className="bg-slate-900 p-2 rounded-xl border border-white/5">
-                <span className="text-slate-400 text-[10px] block">Wind Speed</span>
-                <span className="font-bold text-white">12 km/h</span>
+            </div>
+
+            <div className="bg-slate-900/90 p-3.5 rounded-xl border border-white/5 flex items-center gap-3">
+              <Droplets className="w-5 h-5 text-teal-400 shrink-0" />
+              <div>
+                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Humidity</span>
+                <span className="font-extrabold text-white text-sm">{weather.humidity}%</span>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/90 p-3.5 rounded-xl border border-white/5 flex items-center gap-3">
+              <Wind className="w-5 h-5 text-blue-400 shrink-0" />
+              <div>
+                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Wind Speed</span>
+                <span className="font-extrabold text-white text-sm">{weather.windSpeed} km/h</span>
               </div>
             </div>
           </div>
-
         </div>
 
         {/* Emergency Hotlines Directory */}
