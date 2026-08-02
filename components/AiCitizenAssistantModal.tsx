@@ -35,7 +35,7 @@ export const AiCitizenAssistantModal: React.FC<AiCitizenAssistantModalProps> = (
     {
       id: 'welcome',
       role: 'assistant',
-      content: "Mabanglo at Marayang Araw! I am Lingkod-Umingan AI, your virtual assistant for the Municipality of Umingan, Pangasinan. How can I assist you today with municipal permits, real property taxes, barangay contacts, or local tourism spots like Mount Amor and Barat River?",
+      content: "Magandang Araw! I am Lingkod-Umingan AI, your virtual assistant for the Municipality of Umingan, Pangasinan. How can I assist you today with municipal permits, real property taxes, barangay contacts, or local tourism spots like Mount Amor and Barat River?",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
